@@ -1,0 +1,110 @@
+==00:00:00:00.000 66418== Memcheck, a memory error detector
+==00:00:00:00.000 66418== Copyright (C) 2002-2012, and GNU GPL'd, by Julian Seward et al.
+==00:00:00:00.000 66418== Using Valgrind-3.8.1 and LibVEX; rerun with -h for copyright info
+==00:00:00:00.000 66418== Command: ./block_file_manager_test
+==00:00:00:00.000 66418== Parent PID: 54534
+==00:00:00:00.000 66418== 
+--00:00:00:00.000 66418-- 
+--00:00:00:00.000 66418-- Valgrind options:
+--00:00:00:00.000 66418--    --tool=memcheck
+--00:00:00:00.000 66418--    --leak-check=full
+--00:00:00:00.000 66418--    --track-origins=yes
+--00:00:00:00.000 66418--    --show-reachable=yes
+--00:00:00:00.000 66418--    -v
+--00:00:00:00.000 66418--    --track-fds=yes
+--00:00:00:00.000 66418--    --time-stamp=yes
+--00:00:00:00.000 66418--    --log-file=./Valgrind_store_7120.log
+--00:00:00:00.000 66418--    --demangle=yes
+--00:00:00:00.000 66418--    --leak-resolution=high
+--00:00:00:00.000 66418--    --read-var-info=yes
+--00:00:00:00.000 66418-- Contents of /proc/version:
+--00:00:00:00.000 66418--   Linux version 2.6.32-573.8.1.el6.x86_64 (mockbuild@c6b8.bsys.dev.centos.org) (gcc version 4.4.7 20120313 (Red Hat 4.4.7-16) (GCC) ) #1 SMP Tue Nov 10 18:01:38 UTC 2015
+--00:00:00:00.000 66418-- Arch and hwcaps: AMD64, amd64-sse3-cx16-lzcnt-avx2-bmi
+--00:00:00:00.000 66418-- Page sizes: currently 4096, max supported 4096
+--00:00:00:00.000 66418-- Valgrind library directory: /usr/lib64/valgrind
+--00:00:00:04.398 66418-- Reading syms from /home/liwei/master/trunk/DRC-core/core/lib/calculate_engine/unittest/block_file_manager_test
+--00:00:00:04.600 66418-- warning: addVar: unknown size (m)
+--00:00:00:04.600 66418-- Reading syms from /usr/lib64/valgrind/memcheck-amd64-linux
+--00:00:00:04.649 66418--    object doesn't have a dynamic symbol table
+--00:00:00:07.272 66418-- warning: addVar: unknown size (ips)
+--00:00:00:07.278 66418-- warning: addVar: unknown size (kwds)
+--00:00:00:07.279 66418-- warning: addVar: unknown size (buf)
+--00:00:00:07.279 66418-- warning: addVar: unknown size (buf)
+--00:00:00:07.279 66418-- warning: addVar: unknown size (buf)
+--00:00:00:07.279 66418-- warning: addVar: unknown size (buf)
+--00:00:00:07.279 66418-- warning: addVar: unknown size (buf)
+--00:00:00:07.290 66418-- warning: addVar: unknown size (comps)
+--00:00:00:07.290 66418-- warning: addVar: unknown size (comps)
+--00:00:00:07.427 66418-- Reading syms from /lib64/ld-2.12.so
+--00:00:00:07.428 66418-- Scheduler: using generic scheduler lock implementation.
+--00:00:00:07.448 66418-- Reading suppressions file: /usr/lib64/valgrind/default.supp
+==00:00:00:07.462 66418== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-66418-by-liwei-on-localhost.localdomain
+==00:00:00:07.462 66418== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-66418-by-liwei-on-localhost.localdomain
+==00:00:00:07.462 66418== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-66418-by-liwei-on-localhost.localdomain
+==00:00:00:07.462 66418== 
+==00:00:00:07.462 66418== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==00:00:00:07.462 66418== don't want to do, unless you know exactly what you're doing,
+==00:00:00:07.462 66418== or are doing some strange experiment):
+==00:00:00:07.462 66418==   /usr/lib64/valgrind/../../bin/vgdb --pid=66418 ...command...
+==00:00:00:07.462 66418== 
+==00:00:00:07.462 66418== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==00:00:00:07.462 66418==   /path/to/gdb ./block_file_manager_test
+==00:00:00:07.462 66418== and then give GDB the following command
+==00:00:00:07.462 66418==   target remote | /usr/lib64/valgrind/../../bin/vgdb --pid=66418
+==00:00:00:07.462 66418== --pid is optional if only one valgrind process is running
+==00:00:00:07.462 66418== 
+--00:00:00:07.951 66418-- REDIR: 0x3609217d10 (strlen) redirected to 0x38049551 (vgPlain_amd64_linux_REDIR_FOR_strlen)
+--00:00:00:08.050 66418-- Reading syms from /usr/lib64/valgrind/vgpreload_core-amd64-linux.so
+--00:00:00:08.078 66418-- Reading syms from /usr/lib64/valgrind/vgpreload_memcheck-amd64-linux.so
+--00:00:00:08.110 66418-- REDIR: 0x3609217b20 (index) redirected to 0x4a07c30 (index)
+--00:00:00:08.113 66418-- REDIR: 0x3609217ba0 (strcmp) redirected to 0x4a08570 (strcmp)
+--00:00:00:08.133 66418-- Reading syms from /home/liwei/master/trunk/DRC-core/core/lib/calculate_engine/libhistory.so
+--00:00:00:08.184 66418-- Reading syms from /lib64/librt-2.12.so
+--00:00:00:08.192 66418-- Reading syms from /home/liwei/master/trunk/DRC-core/core/lib/calculate_engine/libmemp.so
+--00:00:00:08.206 66418-- Reading syms from /lib64/libgcc_s-4.4.7-20120601.so.1
+--00:00:00:08.206 66418--    object doesn't have a symbol table
+--00:00:00:08.222 66418-- Reading syms from /lib64/libc-2.12.so
+--00:00:00:08.364 66418-- Reading syms from /usr/lib64/libstdc++.so.6.0.13
+--00:00:00:08.365 66418--    object doesn't have a symbol table
+--00:00:00:08.401 66418-- Reading syms from /lib64/libm-2.12.so
+--00:00:00:08.420 66418-- Reading syms from /lib64/libpthread-2.12.so
+--00:00:00:08.519 66418-- REDIR: 0x3609684e60 (strcasecmp) redirected to 0x480155c (_vgnU_ifunc_wrapper)
+--00:00:00:08.522 66418-- REDIR: 0x3609687120 (strncasecmp) redirected to 0x480155c (_vgnU_ifunc_wrapper)
+--00:00:00:08.552 66418-- REDIR: 0x36096812f0 (__GI_strlen) redirected to 0x4a07fb0 (__GI_strlen)
+--00:00:00:08.563 66418-- REDIR: 0x3609682dd0 (__GI_strrchr) redirected to 0x4a07ab0 (__GI_strrchr)
+--00:00:00:08.599 66418-- REDIR: 0x360967aba0 (malloc) redirected to 0x4a069ac (malloc)
+--00:00:00:08.645 66418-- REDIR: 0x36096812b0 (strlen) redirected to 0x480155c (_vgnU_ifunc_wrapper)
+--00:00:00:08.654 66418-- REDIR: 0x36142bd0a0 (operator new(unsigned long)) redirected to 0x4a0757a (operator new(unsigned long))
+--00:00:00:08.657 66418-- REDIR: 0x3609689800 (memcpy) redirected to 0x4a08b60 (memcpy)
+--00:00:00:08.675 66418-- REDIR: 0x360968ac80 (strchrnul) redirected to 0x4a09fb0 (strchrnul)
+--00:00:00:08.687 66418-- REDIR: 0x360967ba00 (free) redirected to 0x4a063a9 (free)
+--00:00:00:08.690 66418-- REDIR: 0x3609682da0 (rindex) redirected to 0x480155c (_vgnU_ifunc_wrapper)
+--00:00:00:08.780 66418-- REDIR: 0x360967bf00 (realloc) redirected to 0x4a06b57 (realloc)
+--00:00:00:21.601 66418-- REDIR: 0x36142bb2f0 (operator delete(void*)) redirected to 0x4a05f8f (operator delete(void*))
+==00:00:00:27.666 66418== 
+==00:00:00:27.666 66418== FILE DESCRIPTORS: 4 open at exit.
+==00:00:00:27.666 66418== Open file descriptor 3: /home/liwei/master/trunk/DRC-core/core/lib/calculate_engine/unittest/Valgrind_store_7120.log
+==00:00:00:27.666 66418==    <inherited from parent>
+==00:00:00:27.666 66418== 
+==00:00:00:27.666 66418== Open file descriptor 2: /dev/pts/0
+==00:00:00:27.666 66418==    <inherited from parent>
+==00:00:00:27.666 66418== 
+==00:00:00:27.666 66418== Open file descriptor 1: /dev/pts/0
+==00:00:00:27.666 66418==    <inherited from parent>
+==00:00:00:27.666 66418== 
+==00:00:00:27.666 66418== Open file descriptor 0: /dev/pts/0
+==00:00:00:27.666 66418==    <inherited from parent>
+==00:00:00:27.666 66418== 
+==00:00:00:27.666 66418== 
+==00:00:00:27.666 66418== HEAP SUMMARY:
+==00:00:00:27.666 66418==     in use at exit: 0 bytes in 0 blocks
+==00:00:00:27.666 66418==   total heap usage: 13 allocs, 13 frees, 18,866,315 bytes allocated
+==00:00:00:27.666 66418== 
+==00:00:00:27.666 66418== All heap blocks were freed -- no leaks are possible
+==00:00:00:27.666 66418== 
+==00:00:00:27.666 66418== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 6 from 6)
+--00:00:00:27.666 66418-- 
+--00:00:00:27.666 66418-- used_suppression:      4 U1004-ARM-_dl_relocate_object
+--00:00:00:27.666 66418-- used_suppression:      2 glibc-2.5.x-on-SUSE-10.2-(PPC)-2a
+==00:00:00:27.666 66418== 
+==00:00:00:27.666 66418== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 6 from 6)
