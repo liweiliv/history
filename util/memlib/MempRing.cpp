@@ -14,24 +14,21 @@
 #ifndef unlikely
 # define unlikely(x)    __builtin_expect(!!(x), 0)
 #endif
-#define MR_DEFAULT_BUF_SIZE (1024*1024*16)
-int init_memp_ring(memp_ring* p,size_t block_size)
+int init_memp_ring(memp_ring* p,uint64_t default_node_size)
 {
     c_init_chain(&p->head);
-    if(block_size ==0)
-    	p->block_size = MR_DEFAULT_BUF_SIZE;
-    else
-    	p->block_size = block_size;
-    if(NULL==(p->head_node=(memp_ring_node*)malloc(offsetof(memp_ring_node,buf)+p->block_size)))
+    memset(p->q,0,sizeof(p->q));
+    if(NULL==(p->head_node=(memp_ring_node*)malloc(offsetof(memp_ring_node,buf)+default_node_size)))
         return -1;
     c_insert_in_head(&p->head,&p->head_node->cn);
-    p->head_node->buf_size=p->block_size;
+    p->head_node->buf_size=default_node_size;
     p->head_node->hole=NULL;
 
     p->end_node=p->head_node;
     p->end_pos=p->head_pos=p->head_node->buf;
     p->qe=p->qh=0;
     p->lock=malloc(sizeof(pthread_mutex_t));
+    p->default_node_size = default_node_size;
     pthread_mutex_init((pthread_mutex_t *)p->lock,NULL);
     return 0;
 }
@@ -71,14 +68,14 @@ void * ring_alloc(memp_ring *p ,size_t size)
         /*如果下一个node是尾部node，则创建一个新的node，不允许继续在尾部的前半截分配，避免头部与尾部在同一个node里，而且头在尾之前时，遇到剩余空间不足必须新分配node的情况*/
         if(n==p->end_node)
         {
-            if(buf_size<p->block_size)
-                buf_size=p->block_size;
+            if(buf_size<p->default_node_size)
+                buf_size=p->default_node_size;
         }
         else /*head之后的下一个node可以用*/
         {
 
-            if(buf_size<p->block_size&&n->buf_size>p->block_size)/*如果空间太大，则收缩到默认值*/
-                buf_size=p->block_size;
+            if(buf_size<p->default_node_size&&n->buf_size>p->default_node_size)/*如果空间太大，则收缩到默认值*/
+                buf_size=p->default_node_size;
             else if(buf_size<=n->buf_size) /*如果空间不足，则直接使用原始的buf_size=size+sizeof(size_t)创建一个刚刚够用的node替换 ;否则直接使用next node*/
                 goto nalloc;
             c_delete_node(&p->head,&n->cn);
@@ -154,9 +151,15 @@ void ring_free(memp_ring *p,void * v)
         check_hole(p);
         if(v!=p->end_pos)
         {
-            p->q[p->qh].pos=((char*)v);
-            p->q[p->qh].size=size;
-            p->qh=(p->qh+1)%1024;
+            int last = (p->qh+1024-1)%1024;
+            if(p->qe!=p->qh&&p->q[last].pos+p->q[last].size==(char*)v)
+                p->q[last].size+=size;
+            else
+            {
+                p->q[p->qh].pos=((char*)v);
+                p->q[p->qh].size=size;
+                p->qh=(p->qh+1)%1024;
+            }
             return;
         }
     }
@@ -183,6 +186,7 @@ void ring_free(memp_ring *p,void * v)
  */
 void * ring_realloc(memp_ring *p ,void *addr,size_t size)
 {
+
     if(p->head_node->buf>(char*)addr||p->head_pos<(char*)addr)
         return NULL;
     size_t *p_current_size=(size_t*)((char*)addr-sizeof(size_t));
@@ -206,4 +210,25 @@ void * ring_realloc(memp_ring *p ,void *addr,size_t size)
         return addr;
     }
 }
-
+void ring_clear(memp_ring *p,int min_nodes)
+{
+    p->qe=p->qh=0;
+    if(min_nodes<=0)
+        min_nodes =1;
+    c_get_list_of_chain_b(node,&p->head,memp_ring_node,cn)
+    {
+        if(p->head.count<=min_nodes)
+            node->hole= NULL;
+        else
+        {
+            memp_ring_node *tmp_node = get_next_dt(node,memp_ring_node,cn);
+            c_delete_node(&p->head,&node->cn);
+            free(node);
+            node = tmp_node;
+        }
+    }
+    p->head_node = get_first_dt(&p->head,memp_ring_node,cn);
+    p->end_node = p->head_node;
+    p->end_pos=p->head_pos=p->head_node->buf;
+    p->qe=p->qh=0;
+}
