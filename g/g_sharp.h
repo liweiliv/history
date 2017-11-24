@@ -164,7 +164,7 @@ private:
         glVertexPointer(3, GT_TYPE, 0, 0);
         if(m_indices)
         {
-
+            glDrawElements(GL_TRIANGLES, m_index_size, GL_UNSIGNED_BYTE, m_indices);
         }
         else
         {
@@ -180,10 +180,34 @@ private:
         // Once bound with 0, all pointers in gl*Pointer() behave as real
         // pointer, so, normal vertex array operations are re-activated
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        return 0;
     }
     inline int draw_normal(POS_TYPE<GT_TYPE> *pos,POS_TYPE<GT_TYPE> *dirct)
     {
-
+        // enable vertex arrays
+        glEnableClientState(GL_NORMAL_ARRAY);
+        glEnableClientState(GL_COLOR_ARRAY);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        if(m_indices)
+            glEnableClientState(GL_INDEX_ARRAY);
+        // before draw, specify vertex and index arrays with their offsets
+        glNormalPointer(GL_FLOAT, 0, m_normals);
+        glColorPointer(3, GL_FLOAT, 0, m_colors);
+        glVertexPointer(3, GL_FLOAT, 0, m_vectors);
+        if(m_indices)
+        {
+            glDrawElements(GL_TRIANGLES, m_index_size, GL_UNSIGNED_BYTE, m_indices);
+        }
+        else
+        {
+            glDrawArrays(GL_TRIANGLES, 0, m_point_size);
+        }
+        glDisableClientState(GL_VERTEX_ARRAY);  // disable vertex arrays
+        glDisableClientState(GL_COLOR_ARRAY);
+        glDisableClientState(GL_NORMAL_ARRAY);
+        if(m_indices)
+            glDisableClientState(GL_INDEX_ARRAY);
+        return 0;
     }
 public:
     void draw(POS_TYPE<GT_TYPE> *pos,POS_TYPE<GT_TYPE> *dirct)

@@ -4,13 +4,13 @@
  *  Created on: 2017年2月16日
  *      Author: liwei
  */
-
-
-#include <errno.h>
-#include <error.h>
+#include "file_opt.h"
 #include <fcntl.h>
 #include <unistd.h>
-int64_t file_read(int fd, unsigned char *buf, uint64_t count)
+#include <errno.h>
+#include <error.h>
+
+int64_t file_read(FD_TYPE fd, unsigned char *buf, uint64_t count)
 {
     uint64_t readbytes, save_count=0;
     for (;;)
@@ -34,7 +34,7 @@ int64_t file_read(int fd, unsigned char *buf, uint64_t count)
     }
     return count;
 }
-int64_t file_write(int fd, unsigned char *buf, uint64_t count)
+int64_t file_write(FD_TYPE fd, unsigned char *buf, uint64_t count)
 {
     uint64_t writebytes, save_count=0;
     for (;;)
@@ -73,6 +73,32 @@ int64_t create_file(const char * filename,unsigned char *buf, uint64_t count)
     close(fd);
     return 0;
 }
+FD_TYPE open_file(const char * file,uint32_t flag)
+{
+    int _flag =0 ;
+    if(flag&F_RDONLY)
+        _flag|=O_RDONLY;
+    if(flag&F_WRONLY)
+        _flag|=O_WRONLY;
+    FD_TYPE fd = 0;
+    if(flag&F_CREATE)
+    {
+        _flag|=O_CREAT;
+        fd=open(file,_flag,S_IRUSR|S_IWUSR);
+    }
+    else
+    {
+        fd=open(file,_flag);
+    }
+    if(fd>=0 )
+        return fd;
+    else
+        return -1;
+}
+int close_file(FD_TYPE fd)
+{
+    return close(fd);
+}
 /*
  * -1 文件存在
  * 0 文件不存在
@@ -80,7 +106,7 @@ int64_t create_file(const char * filename,unsigned char *buf, uint64_t count)
  */
 int check_file_exist(const char *filename)
 {
-   int fd=open(filename,O_RDONLY);
+    FD_TYPE fd=open(filename,O_RDONLY);
    if(fd>0)
    {
        close(fd);

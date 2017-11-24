@@ -9,18 +9,6 @@
 #include "GLFW/glfw3.h"
 int draw()
 {
-    /* Draw a triangle */
-    glBegin(GL_TRIANGLES);
-
-    glColor3f(1.0, 0.0, 0.0);    // Red
-    glVertex3f(0.0, 1.0, 0.0);
-
-    glColor3f(0.0, 1.0, 0.0);    // Green
-    glVertex3f(-1.0, -1.0, 0.0);
-
-    glColor3f(0.0, 0.0, 1.0);    // Blue
-    glVertex3f(1.0, -1.0, 0.0);
-    glEnd();
     return 0;
 }
 int main(void)

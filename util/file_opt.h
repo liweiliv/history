@@ -7,14 +7,27 @@
 
 #ifndef LIB_UTIL_FILE_OPT_H_
 #define LIB_UTIL_FILE_OPT_H_
+//todo test
+#define _LINUX
 #include <stdint.h>
+#ifdef _WINDOWS
+typedef HANDLE  FD_TYPE;
+#endif
+#ifdef _LINUX
+typedef int32_t  FD_TYPE;
+#endif
+#define F_RDONLY 0x01
+#define F_WRONLY 0x02
+#define F_RDWR (F_RDONLY|F_WRONLY)
+#define F_CREATE 0x04
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-int64_t file_read(int fd, unsigned char *buf, uint64_t count);
-int64_t file_write(int fd,unsigned char *buf, uint64_t count);
-int64_t create_file(const char * filename,unsigned char *buf, uint64_t count);
+int64_t file_read(FD_TYPE fd, unsigned char *buf, uint64_t count);
+int64_t file_write(FD_TYPE fd,unsigned char *buf, uint64_t count);
+FD_TYPE open_file(const char * file,uint32_t flag);
+int close_file(FD_TYPE fd);
 /*
  * -1 文件存在
  * 0 文件不存在
