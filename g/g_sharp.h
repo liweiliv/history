@@ -161,7 +161,7 @@ private:
             glEnableClientState(GL_INDEX_ARRAY);
         // before draw, specify vertex and index arrays with their offsets
         glNormalPointer(GL_FLOAT, 0, (void*)(sizeof(POS_TYPE<GT_TYPE>)*m_point_size));
-        glColorPointer(4, GL_FLOAT, 0, (void*)((sizeof(POS_TYPE<GT_TYPE>)+sizeof(POS_TYPE<GLfloat>))*m_point_size));
+        glColorPointer(sizeof(g_color<GLfloat>)/sizeof(GLfloat), GL_FLOAT, 0, (void*)((sizeof(POS_TYPE<GT_TYPE>)+sizeof(POS_TYPE<GLfloat>))*m_point_size));
         glVertexPointer(3, GL_FLOAT, 0, 0);
         if(m_indices)
         {
@@ -189,6 +189,7 @@ private:
         //glEnableClientState(GL_NORMAL_ARRAY);
         glEnableClientState(GL_COLOR_ARRAY);
         glEnableClientState(GL_VERTEX_ARRAY);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         if(m_indices)
             glEnableClientState(GL_INDEX_ARRAY);
         // before draw, specify vertex and index arrays with their offsets
