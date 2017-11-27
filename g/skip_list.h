@@ -212,7 +212,7 @@ static void * insert(skip_list * skip_list, int64_t key, void * value)
         // the loop below.  In the former case the reader will
         // immediately drop to the next level since NULL sorts after all
         // keys.  In the latter case the reader will use the new node.
-        NoBarrier_Store(skip_list->max_height, (void* )(height));
+        NoBarrier_Store(skip_list->max_height, (void*)(uint64_t)(height));
     }
     x = NewSkipListNode(skip_list, height);
     x->key = key;

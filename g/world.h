@@ -5,8 +5,8 @@
  *      Author: liwei
  */
 
-#ifndef WORLD_H_
-#define WORLD_H_
+#ifndef G_WORLD_H_
+#define G_WORLD_H_
 
 struct g_map;
 struct _skip_list;
@@ -18,12 +18,12 @@ private:
     virtual int frame();
     virtual int eliminate();
 public:
-    virtual world();
+    world();
     virtual ~world();
     virtual int draw();
-    virtual void load_data(const char * file);
+    virtual bool load_data(const char * file);
 };
 
 
 
-#endif /* WORLD_H_ */
+#endif /* G_WORLD_H_ */

@@ -8,16 +8,32 @@
 #ifndef G_G_OBJ_H_
 #define G_G_OBJ_H_
 
-enum
+enum g_obj_type
 {
     GT_TREE, GT_STORN, GT_HUMAN, GT_WATER, GT_ARMOR, GT_WEAPON
-} g_obj_type;
+} ;
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include "file_opt.h"
 #include "g_sharp.h"
+#define GL_OBJ_DOUBLE 0x01UL
+#define GL_OBJ_FLOAT 0x02UL
+#define GL_OBJ_INT 0x03UL
+#define GL_OBJ_UINT 0x04UL
+#define GL_OBJ_CHAR 0x05UL
+#define GL_OBJ_UCHAR 0x06UL
+#define GL_OBJ_SHORT 0x07UL
+#define GL_OBJ_USHORT 0x08UL
+#define GL_OBJ_LONG 0x09UL
+#define GL_OBJ_ULONG 0x0aUL
+
+#define GL_OBJ_OFF 60
+#define GL_OBJ_MASk (0xfUL <<GL_OBJ_OFF)
+#define GL_OBJ_TYPE(obj) ((obj)>>GL_OBJ_OFF)
+#define GET_GL_OBJ(obj) ((void*)(((uint64_t)(obj))&(~GL_OBJ_MASk)))
+#define CREATE_GL_OBJ(obj,type) ((void*)((obj)|((type)<<GL_OBJ_OFF)))
 template<typename GT_TYPE>
 class g_obj
 {
@@ -52,11 +68,19 @@ public:
         m_sharp = new g_sharp<GT_TYPE, g_pos_3d>(shape);
         m_shape_share = false;
     }
-    virtual void draw() const =0;
+    inline uint32_t get_id() {return m_id;}
+    virtual void draw()  =0;
+    enum OBJ_LOAD_STATUS
+    {
+        OLS_HEAD,
+        OLS_VECTOR,
+        OLS_NOM
+    };
     static g_obj<GT_TYPE> *load_from_mem(const char * data, size_t size)
     {
-
+        return NULL;
     }
+
     static g_obj<GT_TYPE> *load_from_file(const char *file)
     {
         FD_TYPE fd = open_file(file,F_RDONLY);
@@ -69,6 +93,7 @@ public:
         {
 
         }
+        return NULL;
     }
 };
 

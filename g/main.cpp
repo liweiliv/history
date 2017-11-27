@@ -7,6 +7,7 @@
 
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
+#include "world.h"
 int draw()
 {
     return 0;
@@ -18,9 +19,14 @@ int main(void)
     /* Initialize the library */
     if (!glfwInit())
         return -1;
-
+    world w;
+    if(!w.load_data(NULL))
+    {
+        glfwTerminate();
+        return -1;
+    }
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(480, 320, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(600, 600, "World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -34,7 +40,7 @@ int main(void)
     while (!glfwWindowShouldClose(window))
     {
 
-        draw();
+        w.draw();
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
 
