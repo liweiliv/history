@@ -4,10 +4,11 @@
  *  Created on: 2017年11月17日
  *      Author: liwei
  */
-
+#include <unistd.h>
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
 #include "world.h"
+#include "g_map.h"
 int draw()
 {
     return 0;
@@ -20,6 +21,7 @@ int main(void)
     if (!glfwInit())
         return -1;
     world w;
+    g_map m(1,0,0,0,0,"fs");
     if(!w.load_data(NULL))
     {
         glfwTerminate();
@@ -39,8 +41,11 @@ int main(void)
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+        usleep(10000);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        w.draw();
+        m.draw();
+        //w.draw();
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
 

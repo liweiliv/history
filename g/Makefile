@@ -4,7 +4,7 @@ COMMON_LIB = -lpthread -ldl
 LOCAL_LIB = -L../util/memlib -lmemp
 CFLAGS = -g
 CINCS =  -I../util -I../util/memlib
-MAP =  world.o
+MAP =  world.o g_map.o
 World:main.o $(MAP)
 	g++ -o World $^  $(GL_LIB) $(WINDOW_LIB) $(COMMON_LIB) $(LOCAL_LIB)
 .cpp.o:
