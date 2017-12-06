@@ -14,6 +14,7 @@
 //lazy create
 #include <string.h>
 #include <stdint.h>
+#include <math.h>
 #include "quadtree.h"
 #include "g_map.h"
 #include "g_obj.h"
@@ -57,21 +58,35 @@ void g_map::destroy_map(void* v)
 {
     delete static_cast<map_obj*>(v);
 }
+static inline void calculate_point_in_ball(double diameter,g_pos_3d<GLfloat>* point)
+{
+	double mod = sqrt(diameter*diameter/(point->x*point->x+point->y*point->y+point->z*point->z));
+	point->x*=mod;
+	point->y*=mod;
+	point->z*=mod;
+}
 void g_map::create_sub_triangler(struct _quadtree * tree, quadtree_node * node)
 {
     g_pos_3d<GLfloat> v01, v12, v20;
     map_obj * m = static_cast<map_obj*>(node->v);
-    v01.x = (m->m_sharp->m_vectors[0].x + m->m_sharp->m_vectors[1].x) / 2.0;
-    v01.y = (m->m_sharp->m_vectors[0].y + m->m_sharp->m_vectors[1].y) / 2.0;
-    v01.z = (m->m_sharp->m_vectors[0].z + m->m_sharp->m_vectors[1].z) / 2.0;
 
-    v12.x = (m->m_sharp->m_vectors[1].x + m->m_sharp->m_vectors[2].x) / 2.0;
-    v12.y = (m->m_sharp->m_vectors[1].y + m->m_sharp->m_vectors[2].y) / 2.0;
-    v12.z = (m->m_sharp->m_vectors[1].z + m->m_sharp->m_vectors[2].z) / 2.0;
+    v01.x = (m->m_sharp->m_vectors[0].x + m->m_sharp->m_vectors[1].x) ;
+    v01.y = (m->m_sharp->m_vectors[0].y + m->m_sharp->m_vectors[1].y) ;
+    v01.z = (m->m_sharp->m_vectors[0].z + m->m_sharp->m_vectors[1].z) ;
+    calculate_point_in_ball((double)m_diameter,&v01);
 
-    v20.x = (m->m_sharp->m_vectors[2].x + m->m_sharp->m_vectors[0].x) / 2.0;
-    v20.y = (m->m_sharp->m_vectors[2].y + m->m_sharp->m_vectors[0].y) / 2.0;
-    v20.z = (m->m_sharp->m_vectors[2].z + m->m_sharp->m_vectors[0].z) / 2.0;
+    v12.x = (m->m_sharp->m_vectors[1].x + m->m_sharp->m_vectors[2].x) ;
+    v12.y = (m->m_sharp->m_vectors[1].y + m->m_sharp->m_vectors[2].y) ;
+    v12.z = (m->m_sharp->m_vectors[1].z + m->m_sharp->m_vectors[2].z) ;
+
+    calculate_point_in_ball((double)m_diameter,&v12);
+
+
+    v20.x = (m->m_sharp->m_vectors[2].x + m->m_sharp->m_vectors[0].x) ;
+    v20.y = (m->m_sharp->m_vectors[2].y + m->m_sharp->m_vectors[0].y) ;
+    v20.z = (m->m_sharp->m_vectors[2].z + m->m_sharp->m_vectors[0].z) ;
+
+    calculate_point_in_ball((double)m_diameter,&v20);
 
     if (!node->child[0])
     {

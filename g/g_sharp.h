@@ -190,11 +190,10 @@ private:
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glEnableClientState(GL_COLOR_ARRAY);
         glEnableClientState(GL_VERTEX_ARRAY);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         if(m_indices)
             glEnableClientState(GL_INDEX_ARRAY);
         // before draw, specify vertex and index arrays with their offsets
-        //glNormalPointer(GL_FLOAT, 0, m_normals);
+        glNormalPointer(GL_FLOAT, 0, m_normals);
         glColorPointer(4, GL_FLOAT, 0, m_colors);
         glVertexPointer(3, GL_FLOAT, 0, m_vectors);
         if(m_indices)
@@ -207,7 +206,7 @@ private:
         }
         glDisableClientState(GL_VERTEX_ARRAY);  // disable vertex arrays
         glDisableClientState(GL_COLOR_ARRAY);
-        //glDisableClientState(GL_NORMAL_ARRAY);
+        glDisableClientState(GL_NORMAL_ARRAY);
         if(m_indices)
             glDisableClientState(GL_INDEX_ARRAY);
         return 0;

@@ -85,9 +85,9 @@ public:
         m_sharp->m_vectors[0] = triangler_point_1;
         m_sharp->m_vectors[1] = triangler_point_2;
         m_sharp->m_vectors[2] = triangler_point_3;
-        m_sharp->m_colors[0].r= 0.1f;
-        m_sharp->m_colors[0].g= 0.2f;
-        m_sharp->m_colors[0].b= 0.3f;
+        m_sharp->m_colors[0].r= rand()%100*0.01f;
+        m_sharp->m_colors[0].g= rand()%100*0.01f;
+        m_sharp->m_colors[0].b= rand()%100*0.01f;
      }
     void draw()
     {

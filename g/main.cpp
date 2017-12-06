@@ -28,7 +28,7 @@ int main(void)
         return -1;
     }
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(600, 600, "World", NULL, NULL);
+    window = glfwCreateWindow(1200, 1200, "World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -44,7 +44,7 @@ int main(void)
         usleep(10000);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        m.draw();
+        m.draw(7);
         //w.draw();
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
