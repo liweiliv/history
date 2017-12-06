@@ -1,7 +1,7 @@
 /*
  * mempool.h
  *
- *  Created on: 2015Äê4ÔÂ1ÈÕ
+ *  Created on: 2015ï¿½ï¿½4ï¿½ï¿½1ï¿½ï¿½
  *      Author: liwei
  */
 
@@ -26,7 +26,7 @@
 #define cache_size  64
 #define max_free_block 16;
 
-#define mem_flag_lock 0x00000001   //¼ÓËø
+#define mem_flag_lock 0x00000001   //ï¿½ï¿½ï¿½ï¿½
 #define mem_flag_small 0x00000002
 #define page_mask ((1<<12)-1)
 #if block_size>1024*1024
@@ -52,30 +52,30 @@ typedef union
 struct lo_mempool;
 typedef struct lo_mempool_block
 {
-	void *start;        //blockµÄÓÐÐ§¿Õ¼äµÄÆðÊ¼µØÖ·
-	void *buf_start;    //blockÄÚ´æ¿éµÄµØÖ·
+	void *start;        //blockï¿½ï¿½ï¿½ï¿½Ð§ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ö·
+	void *buf_start;    //blockï¿½Ú´ï¿½ï¿½Äµï¿½Ö·
 	struct lo_mempool *pool;
 	chain_node node;
-	PTYPE all_count;   	  //blockÖÐbufµÄ×ÜÊý
-	PTYPE current_free_count;   	  //blockÖÐfree bufÊý
-	PTYPE first_used_pos;  //µÚÒ»¸öºÄ¾¡µÄbufµÄÐòºÅ
-	PTYPE first_using_pos; //µÚÒ»¸ö°ëÊ¹ÓÃµÄbufµÄÐòºÅ
+	PTYPE all_count;   	  //blockï¿½ï¿½bufï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	PTYPE current_free_count;   	  //blockï¿½ï¿½free bufï¿½ï¿½
+	PTYPE first_used_pos;  //ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½bufï¿½ï¿½ï¿½ï¿½ï¿½
+	PTYPE first_using_pos; //ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ãµï¿½bufï¿½ï¿½ï¿½ï¿½ï¿½
 	block_list pos_clum[1];
 }mempool_block;
 typedef struct lo_mempool
 {
-	unsigned long dt_size; //Êý¾Ý³¤¶È
+	unsigned long dt_size; //ï¿½ï¿½ï¿½Ý³ï¿½ï¿½ï¿½
 	unsigned int flags;
 	unsigned int blocksize;
-	unsigned int align_len;//¶ÔÆë³¤¶È
-	unsigned int buf_dt_count;//Ã¿¸öbufÄÜÈÝÄÉµÄÊý¾ÝÊýÁ¿
-	unsigned int start_pos;   //Ã¿¸öbufÖÐÓÐÐ§¿Õ¼äµÄÆðÊ¼Æ«ÒÆ
+	unsigned int align_len;//ï¿½ï¿½ï¿½ë³¤ï¿½ï¿½
+	unsigned int buf_dt_count;//Ã¿ï¿½ï¿½bufï¿½ï¿½ï¿½ï¿½ï¿½Éµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	unsigned int start_pos;   //Ã¿ï¿½ï¿½bufï¿½ï¿½ï¿½ï¿½Ð§ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½Ê¼Æ«ï¿½ï¿½
 	chain_head using_block_list;
 	chain_head used_block_list;
 #ifdef MEMPOOL_DEBUG
 	FILE * fp;
 #endif
-	void *cache[cache_thread_mod];//»º´æ
+	void *cache[cache_thread_mod];//ï¿½ï¿½ï¿½ï¿½
 	int cache_count[cache_thread_mod];
 	pthread_mutex_t lock;
 	pthread_mutex_t hash_lock[cache_thread_mod];
@@ -88,10 +88,8 @@ typedef struct _mp_4k_buf
 	uint16_t c;
 }mp_4k_buf;
 #define free_mpnode(block) 		do{if((void*)(block)<(block)->buf_start||(char*)(block)>(char*)(block)->buf_start+(pool)->blocksize){free(block->buf_start);free(block);}else free(block->buf_start);}while(0);
-static inline void check_chain(mempool_block *block)
-{
-}
-//ÇåÀícacheÖ±ÖÁË®Î»´ïµ½new_top
+
+//ï¿½ï¿½ï¿½ï¿½cacheÖ±ï¿½ï¿½Ë®Î»ï¿½ïµ½new_top
 static inline void clear_mp_cache(mempool *pool,int new_top,int id)
 {
 	int offset=0;
@@ -101,10 +99,10 @@ static inline void clear_mp_cache(mempool *pool,int new_top,int id)
 #ifdef MEMPOOL_DEBUG
 	fprintf(pool->fp,"clean pool to %d\n",new_top);
 #endif
-	//Ñ­»·´¦ÀícacheµÄ¶¥²¿
+	//Ñ­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½cacheï¿½Ä¶ï¿½ï¿½ï¿½
 	while(pool->cache_count[id]>new_top)
 	{
-		//»ñµÃcache_mem¶ÔÓ¦µÄbuf£¬½«cache_mem¹é»¹¸øbuf
+		//ï¿½ï¿½ï¿½cache_memï¿½ï¿½Ó¦ï¿½ï¿½bufï¿½ï¿½ï¿½ï¿½cache_memï¿½é»¹ï¿½ï¿½buf
 		buf=(mp_4k_buf*)((unsigned long)(cache_mem=pool->cache[id])&(~page_mask));
 		block=buf->block;
 		offset=((char*)cache_mem-((char *)buf+pool->start_pos))/pool->dt_size;
@@ -114,26 +112,26 @@ static inline void clear_mp_cache(mempool *pool,int new_top,int id)
 			buf->last=cache_mem;
 		*(void**)cache_mem=buf->first;
 		buf->first=cache_mem;
-		//Èç¹ûbufÒÑ¾­¿ÕÏÐ£¬½«buf¼ÓÈëµÄblockµÄ¿ÕÏÐÁ´±í
+		//ï¿½ï¿½ï¿½bufï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½bufï¿½ï¿½ï¿½ï¿½ï¿½blockï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #ifdef MEMPOOL_DEBUG
         fprintf(pool->fp,"buf:%lx get mem:%lx,count:\n",buf,cache_mem,buf->c+1);
 #endif
 		if(++buf->c==1)
 		{
-			//Èç¹ûblockµÄusingÎª¿Õ,ÏÖÔÚ½«¸Ä±ä×´Ì¬£¬Ôò½«block¼ÓÈëµ½poolµÄusingÁ´±í
+			//ï¿½ï¿½ï¿½blockï¿½ï¿½usingÎªï¿½ï¿½,ï¿½ï¿½ï¿½Ú½ï¿½ï¿½Ä±ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½blockï¿½ï¿½ï¿½ëµ½poolï¿½ï¿½usingï¿½ï¿½ï¿½ï¿½
 			if(block->first_using_pos==block->all_count)
 			{
 				c_delete_node(&pool->used_block_list,&block->node);
 				c_insert_in_head(&pool->using_block_list,&block->node);
 			}
 			offset=((char*)buf-(char*)block->start)/4096;
-			//½«buf´Óµ±Ç°Ëù´¦µÄÁ´±íÖÐÉ¾³ý
+			//ï¿½ï¿½bufï¿½Óµï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½
 			block->pos_clum[block->pos_clum[offset].node.n].node.p=block->pos_clum[offset].node.p;
 			block->pos_clum[block->pos_clum[offset].node.p].node.n=block->pos_clum[offset].node.n;
-			//Èç¹ûbufÊÇµ±Ç°Ëù´¦Á´±íµÄ±íÍ·£¬½«µ±Ç°Á´±íµÄ±íÍ·¸üÐÐ
+			//ï¿½ï¿½ï¿½bufï¿½Çµï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ä±ï¿½Í·ï¿½ï¿½ï¿½ï¿½
 			if(block->first_used_pos==offset)
 				block->first_used_pos=block->pos_clum[offset].node.n;
-			//½«buf¼ÓÈëµ½freeÁ´±íµÄÍ·²¿
+			//ï¿½ï¿½bufï¿½ï¿½ï¿½ëµ½freeï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½
 			block->pos_clum[offset].node.n=block->first_using_pos;
 			block->pos_clum[block->first_using_pos].node.p=offset;
 			block->first_using_pos=offset;
@@ -178,30 +176,30 @@ static inline int destory_mempool(mempool *pool,int force)
 #endif
 	return 0;
 }
-//´´½¨Ò»¸öÐÂµÄ4kÄ£Ê½µÄblock£¬blockÖÐÃ¿¸öbufµÄ´óÐ¡ÊÇ4k£¬bufµÄ¿ªÍ·ÊÇmp_4k_buf½á¹¹Ìå
+//ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Âµï¿½4kÄ£Ê½ï¿½ï¿½blockï¿½ï¿½blockï¿½ï¿½Ã¿ï¿½ï¿½bufï¿½Ä´ï¿½Ð¡ï¿½ï¿½4kï¿½ï¿½bufï¿½Ä¿ï¿½Í·ï¿½ï¿½mp_4k_bufï¿½á¹¹ï¿½ï¿½
 static inline mempool_block* get_new_block_4k(mempool *pool)
 {
 	void *addr,*saddr,*eaddr,*_tmp;
 	mempool_block * block;
 	mp_4k_buf *buf;
-	//»ñÈ¡block½á¹¹Ìå×ÔÉíµÄ´óÐ¡
+	//ï¿½ï¿½È¡blockï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä´ï¿½Ð¡
 	unsigned int block_st_size=sizeof(mempool_block)+sizeof(unsigned short)*block_size/4096;
-	//»ñµÃÒ»¸öbufÖÐÄÜ´æ·ÅµÄµ¥ÔªµÄÊýÁ¿
-	if(NULL==(addr=malloc(block_size)))//´´½¨block
+	//ï¿½ï¿½ï¿½Ò»ï¿½ï¿½bufï¿½ï¿½ï¿½Ü´ï¿½ÅµÄµï¿½Ôªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	if(NULL==(addr=malloc(block_size)))//ï¿½ï¿½ï¿½ï¿½block
 		return NULL;
-	//È¡µÃaddrºóµÚÒ»¸ö4kµØÖ·
+	//È¡ï¿½ï¿½addrï¿½ï¿½ï¿½Ò»ï¿½ï¿½4kï¿½ï¿½Ö·
 	saddr=(void*)(((unsigned long)addr&(~page_mask))+4096);
-	if((char*)saddr-(char*)addr>=block_st_size)//Èç¹ûaddrÓësaddrÖ®¼äµÄ¿Õ¼ä¿ÉÒÔ´æ·Åblock½á¹¹Ìå£¬¾Í½«block·ÅÔÚ¿ªÍ·
+	if((char*)saddr-(char*)addr>=block_st_size)//ï¿½ï¿½ï¿½addrï¿½ï¿½saddrÖ®ï¿½ï¿½Ä¿Õ¼ï¿½ï¿½ï¿½Ô´ï¿½ï¿½blockï¿½á¹¹ï¿½å£¬ï¿½Í½ï¿½blockï¿½ï¿½ï¿½Ú¿ï¿½Í·
 	{
 		block=(mempool_block *)addr;
 		eaddr=(char*)addr+block_size;
 	}
-	else if((((unsigned long)((char*)addr+block_size))&(page_mask))>=block_st_size)//Èç¹û½áÎ²µ½½áÎ²Ç°µÄµÚÒ»¸ö4kµØÖ·Ö®¼äÓÐ×ã¹»µÄ¿Õ¼ä£¬¾Í½«block½á¹¹Ìå·ÅÔÚÄ©Î²
+	else if((((unsigned long)((char*)addr+block_size))&(page_mask))>=block_st_size)//ï¿½ï¿½ï¿½ï¿½ï¿½Î²ï¿½ï¿½ï¿½ï¿½Î²Ç°ï¿½Äµï¿½Ò»ï¿½ï¿½4kï¿½ï¿½Ö·Ö®ï¿½ï¿½ï¿½ï¿½ï¿½ã¹»ï¿½Ä¿Õ¼ä£¬ï¿½Í½ï¿½blockï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½Ä©Î²
 	{
 		block=(mempool_block*)(((unsigned long)((char*)addr+block_size))&(~page_mask))+1;
 		eaddr=block-1;
 	}
-	else //Í·ºÍÎ²¶¼Ã»ÓÐ×ã¹»µÄ¿Õ¼ä£¬¾Íµ¥¶À´´½¨
+	else //Í·ï¿½ï¿½Î²ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ã¹»ï¿½Ä¿Õ¼ä£¬ï¿½Íµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	{
 		block=(mempool_block*)malloc(block_st_size);
 		eaddr=(char*)addr+block_size;
@@ -214,7 +212,7 @@ static inline mempool_block* get_new_block_4k(mempool *pool)
 #ifdef MEMPOOL_DEBUG
 	fprintf(pool->fp,"create block:%lx,start:%lx,bufcount:%d\n",block,block->start,block->all_count);
 #endif
-	//³õÊ¼»¯blockµÄÁ´±í
+	//ï¿½ï¿½Ê¼ï¿½ï¿½blockï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	for(int i=0;i<block->all_count;i++)
 	{
 		block->pos_clum[i].node.n=i+1;
@@ -223,7 +221,7 @@ static inline mempool_block* get_new_block_4k(mempool *pool)
 
 		
 		buf->block=block;
-		//³õÊ¼»¯bufµÄÁ´±í
+		//ï¿½ï¿½Ê¼ï¿½ï¿½bufï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		_tmp=((uint8_t*)buf)+pool->start_pos;
 		buf->first=_tmp;
 		for(int j=pool->buf_dt_count-1;j>0;j--)
@@ -251,9 +249,9 @@ static inline void *get_mem(mempool *pool)
 {
 	void *mem;
 	pthread_t tid=0;
-	if(pool->flags&mem_flag_lock)//Èç¹û´øËø£¬Ôò¼ÓËø
+	if(pool->flags&mem_flag_lock)//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		pthread_mutex_lock(&pool->hash_lock[(tid=(pthread_self()&cache_thread_mod))]);
-	if(pool->cache[tid]!=NULL)//Èç¹ûcacheÖÐÓÐÊ£ÓàµÄ£¬Ö±½Ó´ÓcacheÖÐÈ¡
+	if(pool->cache[tid]!=NULL)//ï¿½ï¿½ï¿½cacheï¿½ï¿½ï¿½ï¿½Ê£ï¿½ï¿½Ä£ï¿½Ö±ï¿½Ó´ï¿½cacheï¿½ï¿½È¡
 	{
 		mem=pool->cache[tid];
 		pool->cache[tid]=*(void**)pool->cache[tid];
@@ -264,20 +262,20 @@ static inline void *get_mem(mempool *pool)
 	}
 	if(pool->flags&mem_flag_lock)
 		pthread_mutex_lock(&pool->lock);
-	//cacheÒÑ¾­Îª¿Õ£¬Ìî³äcache
+	//cacheï¿½Ñ¾ï¿½Îªï¿½Õ£ï¿½ï¿½ï¿½ï¿½cache
 	int balance=pool->buf_dt_count;
 	while(pool->cache_count[tid]<balance)
 	{
 		mempool_block *block;
 		mp_4k_buf * buf;
-		//ÓÅÏÈ´ÓÎ´Ê¹ÓÃÍêµÄblockÉÏÈ¡µ¥Ôª
+		//ï¿½ï¿½ï¿½È´ï¿½Î´Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½blockï¿½ï¿½È¡ï¿½ï¿½Ôª
 		if(!c_is_empty(&pool->using_block_list))
 		{
-			//»ñµÃ×î½üÊ¹ÓÃµÄÎ´ÓÃÍêµÄblock
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ãµï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½block
 			block=get_first_dt(&pool->using_block_list,mempool_block,node);
 			do
 			{
-				//»ñµÃblockµÄ¿ÕÏÐÁ´±íÖÐµÄµÚÒ»¸ö4k buf
+				//ï¿½ï¿½ï¿½blockï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄµï¿½Ò»ï¿½ï¿½4k buf
 				buf=(mp_4k_buf *)((char*)block->start+4096*block->first_using_pos);
 #ifdef MEMPOOL_DEBUG
 				fprintf(pool->fp,"set all mem from buf:%lx to cache,first:%lx,last:%lx,dt count:%d\n",buf,buf->first,buf->last,buf->c);
@@ -294,7 +292,7 @@ static inline void *get_mem(mempool *pool)
 				block->pos_clum[block->pos_clum[block->first_used_pos].node.p].node.n=block->first_used_pos;
 				block->first_used_pos=block->pos_clum[block->first_used_pos].node.p;
 				block->pos_clum[block->first_using_pos].node.p=block->all_count;
-				//Èç¹ûblockÊµ¼ÊÉÏÒÑ¾­ºÄ¾¡£¬Ôò½«Æä¼ÓÈëµ½ÒÑÓÃÍêÁ´±í
+				//ï¿½ï¿½ï¿½blockÊµï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ëµ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				if(block->all_count==block->first_using_pos)
 				{
 					c_delete_node(&pool->using_block_list,&block->node);
@@ -303,7 +301,7 @@ static inline void *get_mem(mempool *pool)
 				}
 			}while(pool->cache_count[tid]<balance);
 		}
-		else //usingÁ´±íÒÑ¾­ºÄ¾¡£¬Ôò²¹³äÁ½¸öblock£¬ÔÊÐíµÚ¶þ¸ö´´½¨Ê§°Ü
+		else //usingï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½ï¿½ò²¹³ï¿½ï¿½ï¿½ï¿½ï¿½blockï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½
 		{
 			if(NULL==get_new_block_4k(pool))
 			{

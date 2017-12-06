@@ -10,7 +10,7 @@
 
 enum g_obj_type
 {
-    GT_TREE, GT_STORN, GT_HUMAN, GT_WATER, GT_ARMOR, GT_WEAPON
+    GT_TREE, GT_STORN, GT_HUMAN, GT_WATER, GT_ARMOR, GT_WEAPON,GT_MAP
 } ;
 #include <stddef.h>
 #include <stdint.h>
@@ -37,7 +37,7 @@ enum g_obj_type
 template<typename GT_TYPE>
 class g_obj
 {
-protected:
+public:
     uint32_t m_id;
     g_sharp<GT_TYPE, g_pos_3d> * m_sharp;
     bool m_shape_share;

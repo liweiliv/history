@@ -41,8 +41,9 @@ struct g_pos_3d :public g_pos_2d<GT_TYPE>
     GT_TYPE z;
     const g_pos_3d<GT_TYPE> & operator =(const g_pos_3d<GT_TYPE>& s)
     {
-        this->g_pos_2d = s.g_pos_2d;
+        this->x = s.x;
         this->y = s.y;
+        this->z = s.z;
         return *this;
     }
 };
@@ -69,7 +70,7 @@ public:
         m_point_size = point_size;
         m_index_size = index_size;
         if(index_size)
-            m_mem_size=(sizeof(POS_TYPE<GT_TYPE>)+sizeof(POS_TYPE<GLfloat>))*m_point_size+(sizeof(g_color<GLfloat>)+sizeof(GLubyte))*index_size;
+            m_mem_size=sizeof(POS_TYPE<GT_TYPE>)*m_point_size+(sizeof(g_color<GLfloat>)+sizeof(GLubyte)+sizeof(POS_TYPE<GLfloat>))*index_size;
         else
             m_mem_size=(sizeof(POS_TYPE<GT_TYPE>)+sizeof(POS_TYPE<GLfloat>)+sizeof(g_color<GLfloat>))*m_point_size;
         m_mem = malloc(m_mem_size);
@@ -81,7 +82,6 @@ public:
         else
             m_indices = NULL;
         m_vbo_buf_id = 0xffffffff;
-        m_point_size = 0;
         m_draw_type = 0;
         m_use_vbo = use_vbo;
     }
@@ -187,6 +187,7 @@ private:
     {
         // enable vertex arrays
         //glEnableClientState(GL_NORMAL_ARRAY);
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glEnableClientState(GL_COLOR_ARRAY);
         glEnableClientState(GL_VERTEX_ARRAY);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -194,7 +195,7 @@ private:
             glEnableClientState(GL_INDEX_ARRAY);
         // before draw, specify vertex and index arrays with their offsets
         //glNormalPointer(GL_FLOAT, 0, m_normals);
-        glColorPointer(3, GL_FLOAT, 0, m_colors);
+        glColorPointer(4, GL_FLOAT, 0, m_colors);
         glVertexPointer(3, GL_FLOAT, 0, m_vectors);
         if(m_indices)
         {
