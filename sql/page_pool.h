@@ -5,8 +5,8 @@
  *      Author: liwei
  */
 
-#ifndef PAGE_POOL_H_
-#define PAGE_POOL_H_
+#ifndef SQL_PAGE_POOL_H_
+#define SQL_PAGE_POOL_H_
 #include <stdint.h>
 #include "util/atomic.h"
 #include "util/db_chain.h"
@@ -14,7 +14,7 @@
 #ifdef MEMDEBUG
 #include <stdio.h>
 #include <time.h>
-#include "batch_log.h"
+#include "sql/batch_log.h"
 #endif
 #include <pthread.h>
 
@@ -108,4 +108,4 @@ void destory_page_pool(page_pool *pool);
 
 void * alloc_page(pp_thd *thd);
 void free_page(void * data);
-#endif /* PAGE_POOL_H_ */
+#endif /* SQL_PAGE_POOL_H_ */

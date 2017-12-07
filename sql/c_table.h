@@ -7,10 +7,10 @@
 
 #ifndef LIB_CALCULATE_ENGINE_C_TABLE_H_
 #define LIB_CALCULATE_ENGINE_C_TABLE_H_
-#include "c_block.h"
 #include "db_chain.h"
 #include "BR.h"
 #include "BinlogRecord.h"
+#include "sql/c_block.h"
 struct _c_database;
 
 typedef struct _c_table{

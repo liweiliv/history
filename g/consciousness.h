@@ -8,6 +8,10 @@
 #ifndef G_CONSCIOUSNESS_H_
 #define G_CONSCIOUSNESS_H_
 #include <pthread.h>
+#include <stdint.h>
+#include <string>
+#include <map>
+#include "db_chain.h"
 class logic_obj;
 struct history_data
 {
@@ -49,8 +53,8 @@ public:
     consciousness_sys();
     ~consciousness_sys();
     consciousness * get_consciousness(uint32_t id);
-    int add_consciousness(uint32_t id,const char * name,const char * limit,int level,consciousness_func func);
-    int add_consciousness_from_dll(uint32_t id,const char * name,const char * limit,int level,const char * func_name,const char * libPath);
+    int add_consciousness(uint32_t id,const char * name,const char * limit,purpose_level level,consciousness_func func);
+    int add_consciousness_from_dll(uint32_t id,const char * name,const char * limit,purpose_level level,const char * func_name,const char * libPath);
     int load_consciousness_from_file(const char * conf_file);
 };
 

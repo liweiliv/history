@@ -2,7 +2,7 @@ GL_LIB = -lglfw3 -lGL -lGLEW
 WINDOW_LIB = -lX11 -lXrandr -l Xxf86vm -lXcursor -lXi -lXinerama
 COMMON_LIB = -lpthread -ldl
 LOCAL_LIB = -L../util/memlib -lmemp
-CFLAGS = -g
+CFLAGS = -g -DUSE_GLFW
 CINCS =  -I../util -I../util/memlib
 MAP =  world.o g_map.o
 World:main.o $(MAP)

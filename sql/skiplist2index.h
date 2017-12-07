@@ -7,11 +7,11 @@
 
 #ifndef LIB_CALCULATE_ENGINE_SKIPLIST2INDEX_H_
 #define LIB_CALCULATE_ENGINE_SKIPLIST2INDEX_H_
-#include "skip_list.h"
-#include "c_block.h"
 #include <string.h>
 
 #include "../util/atomic.h"
+#include "sql/c_block.h"
+#include "sql/skip_list.h"
 typedef struct _int_key
 {
     int64_t k;

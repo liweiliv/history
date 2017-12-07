@@ -5,8 +5,8 @@
  *      Author: liwei
  *
  */
-
-
+#include <stdint.h>
+#include <stddef.h>
 
 //继承自leveldb
 uint32_t c_hash(const char* data, size_t n, uint32_t seed) {

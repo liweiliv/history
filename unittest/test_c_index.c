@@ -4,13 +4,14 @@
  *  Created on: 2016年12月20日
  *      Author: liwei
  */
-#include "../c_index.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include "stddef.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/types.h>
+
+#include "../sql/c_index.h"
 int check_int_data(c_table_index *idx)
 {
     uint64_t value;

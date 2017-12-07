@@ -4,7 +4,8 @@
  *  Created on: 2016年12月8日
  *      Author: liwei
  */
-#include "c_index.h"
+#include "sql/c_index.h"
+
 #include "file_opt.h"
 #include <stdio.h>
 #include <fcntl.h>

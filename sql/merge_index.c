@@ -1,3 +1,4 @@
+
 /*
  * merge_index.c
  *
@@ -6,7 +7,7 @@
  */
 #define MAX_WAYS 2048
 static int ls[MAX_WAYS];            /* loser tree */
-#include "c_index.h"
+#include "sql/c_index.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>

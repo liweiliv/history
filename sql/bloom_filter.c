@@ -10,8 +10,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
+#include "sql/bloom_filter.h"
+
 #include "hash.h"
-#include "bloom_filter.h"
 static  uint32_t BloomHash(const char * key, size_t size)
 {
     return c_hash(key, size, 0xbc9f1d34);

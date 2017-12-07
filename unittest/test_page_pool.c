@@ -5,8 +5,8 @@
  *      Author: liwei
  */
 
-#include "../page_pool.h"
 #include <stdio.h>
+#include "../sql/page_pool.h"
 
 int m_exit = 0;
 int type = 0;

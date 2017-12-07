@@ -35,7 +35,7 @@ consciousness * consciousness_sys::get_consciousness(uint32_t id)
     return c;
 }
 int consciousness_sys::add_consciousness(uint32_t id, const char * name,
-        const char * limit, int level, consciousness_func func)
+        const char * limit, purpose_level level, consciousness_func func)
 {
     consciousness * con = new consciousness;
     con->func = func;
@@ -55,7 +55,7 @@ int consciousness_sys::add_consciousness(uint32_t id, const char * name,
     return 0;
 }
 int consciousness_sys::add_consciousness_from_dll(uint32_t id,
-        const char * name, const char * limit, int level,
+        const char * name, const char * limit, purpose_level level,
         const char * func_name, const char * libPath)
 {
     map<string, void*>::iterator dll_iter;
@@ -116,7 +116,7 @@ int consciousness_sys::load_consciousness_from_file(const char * conf_file)
         {
             return -1;
         }
-        if (add_consciousness_from_dll(id, (*iter).c_str(), limit, level,
+        if (add_consciousness_from_dll(id, (*iter).c_str(), limit, (purpose_level)level,
                 funcName, libPath) != 0)
         {
             return -2;

@@ -9,7 +9,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "../skiplist2index.h"
+#include "../sql/skiplist2index.h"
 int test_int()
 {
     leveldb::Arena arena;

@@ -5,7 +5,8 @@
  *      Author: liwei
  */
 #include <stdio.h>
-#include "../skip_list.h"
+
+#include "../sql/skip_list.h"
 typedef uint64_t Key;
 
 struct Comparator {

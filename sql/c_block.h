@@ -11,7 +11,8 @@
 #include "util/db_chain.h"
 #include "util/atomic.h"
 #include <pthread.h>
-#include "c_index.h"
+
+#include "sql/c_index.h"
 
 /*
  * block在磁盘的格式

@@ -6,7 +6,8 @@
  */
 #include <stdint.h>
 #include <stddef.h>
-#include "bloom_filter.h"
+
+#include "sql/bloom_filter.h"
 #ifndef LIB_CALCULATE_ENGINE_C_INDEX_H_
 #define LIB_CALCULATE_ENGINE_C_INDEX_H_
 
