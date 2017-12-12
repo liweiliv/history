@@ -282,4 +282,33 @@ BACK_TO_PARENT:
         }
     }
 }
+struct _quadtree_node * g_map::coordinate2quadtree_node(float longitude ,float latitude,int level)
+{
+    g_pos_3d<GLfloat>  p;
+    p.x=sin((double)longitude)*m_diameter;
+    p.y=cos((double)longitude)*m_diameter;
+    p.z=sin((double)latitude)*m_diameter;
+
+    for (int i = 0; i < 20; i++)
+    {
+        float t = (m_maps[i].m_map->m_normal.x
+                * m_maps[i].m_map->m_sharp->m_vectors[0].x
+                + m_maps[i].m_map->m_normal.y
+                        * m_maps[i].m_map->m_sharp->m_vectors[0].y
+                + m_maps[i].m_map->m_normal.y
+                        * m_maps[i].m_map->m_sharp->m_vectors[0].z)
+                - (m_maps[i].m_map->m_normal.x * p.x
+                        + m_maps[i].m_map->m_normal.y * p.y
+                        + m_maps[i].m_map->m_normal.z * p.z);
+        t/=(m_maps[i].m_map->m_normal.x*m_maps[i].m_map->m_normal.x+
+                m_maps[i].m_map->m_normal.y*m_maps[i].m_map->m_normal.y
+                +m_maps[i].m_map->m_normal.z*m_maps[i].m_map->m_normal.z);
+        g_pos_3d<GLfloat> _p = {p.x+m_maps[i].m_map->m_normal.x*t
+                ,p.y+m_maps[i].m_map->m_normal.y*t,
+                p.z+m_maps[i].m_map->m_normal.z*t};
+
+
+    }
+    return NULL;
+}
 

@@ -73,6 +73,7 @@ class map_obj :public g_obj<GLfloat>
 {
 public:
     g_pos_3d<GLfloat> m_center;
+    g_pos_3d<GLfloat> m_normal;
     uint64_t m_map_id;
     map_obj(uint64_t map_id,int id,const g_pos_3d<GLfloat> & triangler_point_1,const g_pos_3d<GLfloat> & triangler_point_2,const g_pos_3d<GLfloat> & triangler_point_3):
         g_obj<GLfloat>(GT_MAP,id),m_map_id(map_id)
@@ -85,9 +86,13 @@ public:
         m_sharp->m_vectors[0] = triangler_point_1;
         m_sharp->m_vectors[1] = triangler_point_2;
         m_sharp->m_vectors[2] = triangler_point_3;
-        m_sharp->m_colors[0].r= rand()%100*0.01f;
-        m_sharp->m_colors[0].g= rand()%100*0.01f;
-        m_sharp->m_colors[0].b= rand()%100*0.01f;
+        g_sharp<GLfloat, g_pos_3d>::calculate_normal(m_normal,m_sharp->m_vectors[0],m_sharp->m_vectors[1],m_sharp->m_vectors[2]);
+        g_sharp<GLfloat, g_pos_3d>::calculate_normal(m_sharp->m_normals[0],m_sharp->m_vectors[0],m_sharp->m_vectors[1],m_sharp->m_vectors[2]);
+        g_sharp<GLfloat, g_pos_3d>::calculate_normal(m_sharp->m_normals[1],m_sharp->m_vectors[1],m_sharp->m_vectors[2],m_sharp->m_vectors[0]);
+        g_sharp<GLfloat, g_pos_3d>::calculate_normal(m_sharp->m_normals[2],m_sharp->m_vectors[2],m_sharp->m_vectors[0],m_sharp->m_vectors[1]);
+        m_sharp->m_colors[0].r= 0.2f+rand()%30*0.01f;
+        m_sharp->m_colors[0].g= 0.2f+rand()%30*0.01f;
+        m_sharp->m_colors[0].b= 0.2f+rand()%30*0.01f;
      }
     void draw()
     {

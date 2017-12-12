@@ -133,7 +133,7 @@ int main_loop()
     while (!glfwWindowShouldClose(main_window))
     {
         usleep(10000);
-        m.draw(7);
+        m.draw(0);
         //w.draw();
         /* Swap front and back buffers */
         glfwSwapBuffers(main_window);

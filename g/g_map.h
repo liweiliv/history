@@ -81,6 +81,7 @@ public:
     g_map(int diameter,float obliguity,int rotation_period,float orbital_inclination,int orbital_period,const char* map_index_file);
     ~g_map();
     void draw(int level = 3);
+    struct _quadtree_node * coordinate2quadtree_node(float longitude ,float latitude,int level);
 };
 
 

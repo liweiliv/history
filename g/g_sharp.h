@@ -9,8 +9,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>
+#include <math.h>
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
+
 #pragma pack(1)
 template <typename GT_TYPE>
 struct g_color{
@@ -33,11 +35,26 @@ struct g_pos_2d
         this->y = s.y;
         return *this;
     }
+    g_pos_2d<GT_TYPE>  operator -(const g_pos_2d<GT_TYPE>& s)
+   {
+        return g_pos_2d<GT_TYPE> (this->x - s.x,this->y - s.y);
+   }
+    g_pos_2d<GT_TYPE>  operator +(const g_pos_2d<GT_TYPE>& s)
+   {
+        return g_pos_2d<GT_TYPE> (this->x + s.x,this->y + s.y);
+   }
 };
 #define INIT_POS_3D(p,xv,yv,zv) INIT_POS_2D(p,xv,yv) (p)->z=(zv);
+#define SUB_3D_VECTOR(s,bs,d) (d).x = do {(d).x=(s).x-(bs).x;(d).y=(s).y-(bs).y;(d).z=(s).z-(bs).z;}while(0)
+#define D_SUB_3D_VECTOR(d,s,bs) decltype(s) d = {(s).x-(bs).x,(s).y-(bs).y,(s).z-(bs).z};
+
+#define ADD_3D_VECTOR(a,ba,d) (d).x = do {(d).x=(a).x+(ba).x;(d).y=(a).y+(ba).y;(d).z=(a).z+(ba).z;}while(0)
+#define D_ADD_3D_VECTOR(d,a,ba) decltype(s) d = {(a).x+(ba).x,(a).y-(ba).y,(a).z-(ba).z};
 template <typename GT_TYPE>
-struct g_pos_3d :public g_pos_2d<GT_TYPE>
+struct g_pos_3d //:public g_pos_2d<GT_TYPE>
 {
+    GT_TYPE x;
+    GT_TYPE y;
     GT_TYPE z;
     const g_pos_3d<GT_TYPE> & operator =(const g_pos_3d<GT_TYPE>& s)
     {
@@ -45,6 +62,14 @@ struct g_pos_3d :public g_pos_2d<GT_TYPE>
         this->y = s.y;
         this->z = s.z;
         return *this;
+    }
+     g_pos_3d<GT_TYPE>  operator -(const g_pos_3d<GT_TYPE>& s)
+    {
+         return g_pos_3d<GT_TYPE> (this->x - s.x,this->y - s.y,this->z -s.z);
+    }
+     g_pos_3d<GT_TYPE>  operator +(const g_pos_3d<GT_TYPE>& s)
+    {
+         return g_pos_3d<GT_TYPE> (this->x + s.x,this->y + s.y,this->z + s.z);
     }
 };
 #pragma pack()
@@ -221,6 +246,19 @@ public:
             else
                 draw_normal(pos,dirct);
         }
+    }
+    static void calculate_normal(g_pos_3d<GT_TYPE> & normal,const g_pos_3d<GT_TYPE> &v,const g_pos_3d<GT_TYPE> &v1,const g_pos_3d<GT_TYPE> &v2)
+    {
+        D_SUB_3D_VECTOR(v1_tmp,v1,v);
+        D_SUB_3D_VECTOR(v2_tmp,v2,v);
+
+        normal.x = v1_tmp.y * v2_tmp.z - v1_tmp.z * v2_tmp.y;
+        normal.y = v1_tmp.z * v2_tmp.x - v1_tmp.x * v2_tmp.z;
+        normal.z = v1_tmp.x * v2_tmp.y - v1_tmp.y * v2_tmp.x;
+        GT_TYPE mode = GT_TYPE(1)/sqrt(static_cast<double>(normal.x*normal.x+normal.y*normal.y+normal.z*normal.z));
+        normal.x*=mode;
+        normal.y*=mode;
+        normal.z*=mode;
     }
 };
 
