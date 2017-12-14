@@ -50,6 +50,8 @@ struct g_pos_2d
 
 #define ADD_3D_VECTOR(a,ba,d) (d).x = do {(d).x=(a).x+(ba).x;(d).y=(a).y+(ba).y;(d).z=(a).z+(ba).z;}while(0)
 #define D_ADD_3D_VECTOR(d,a,ba) decltype(s) d = {(a).x+(ba).x,(a).y-(ba).y,(a).z-(ba).z};
+
+
 template <typename GT_TYPE>
 struct g_pos_3d //:public g_pos_2d<GT_TYPE>
 {
@@ -74,12 +76,26 @@ struct g_pos_3d //:public g_pos_2d<GT_TYPE>
 };
 #pragma pack()
 #define INIT_G_POS(p) memset(&(p),0,sizeof(p))
-template <class GT_TYPE,template <class GT_TYPE> class POS_TYPE>
+template<typename GT_TYPE>
+static void calculate_normal(g_pos_3d<GT_TYPE> & normal,const g_pos_3d<GT_TYPE> &v,const g_pos_3d<GT_TYPE> &v1,const g_pos_3d<GT_TYPE> &v2)
+{
+    D_SUB_3D_VECTOR(v1_tmp,v1,v);
+    D_SUB_3D_VECTOR(v2_tmp,v2,v);
+
+    normal.x = v1_tmp.y * v2_tmp.z - v1_tmp.z * v2_tmp.y;
+    normal.y = v1_tmp.z * v2_tmp.x - v1_tmp.x * v2_tmp.z;
+    normal.z = v1_tmp.x * v2_tmp.y - v1_tmp.y * v2_tmp.x;
+    GT_TYPE mode = GT_TYPE(1)/sqrt(static_cast<double>(normal.x*normal.x+normal.y*normal.y+normal.z*normal.z));
+    normal.x*=mode;
+    normal.y*=mode;
+    normal.z*=mode;
+}
+template < typename POS_TYPE>
 class g_sharp
 {
 public:
-    POS_TYPE<GT_TYPE> * m_vectors;
-    POS_TYPE<GLfloat> *m_normals;
+    POS_TYPE * m_vectors;
+    POS_TYPE  *m_normals;
     g_color<GLfloat> * m_colors;
     GLubyte *m_indices;
     uint32_t m_index_size;
@@ -95,11 +111,11 @@ public:
         m_point_size = point_size;
         m_index_size = index_size;
         if(index_size)
-            m_mem_size=sizeof(POS_TYPE<GT_TYPE>)*m_point_size+(sizeof(g_color<GLfloat>)+sizeof(GLubyte)+sizeof(POS_TYPE<GLfloat>))*index_size;
+            m_mem_size=sizeof(POS_TYPE)*m_point_size+(sizeof(g_color<GLfloat>)+sizeof(GLubyte)+sizeof(POS_TYPE))*index_size;
         else
-            m_mem_size=(sizeof(POS_TYPE<GT_TYPE>)+sizeof(POS_TYPE<GLfloat>)+sizeof(g_color<GLfloat>))*m_point_size;
+            m_mem_size=(sizeof(POS_TYPE)+sizeof(POS_TYPE)+sizeof(g_color<GLfloat>))*m_point_size;
         m_mem = malloc(m_mem_size);
-        m_vectors = (POS_TYPE<GT_TYPE> *)m_mem;
+        m_vectors = (POS_TYPE *)m_mem;
         m_normals = &m_vectors[m_point_size];
         m_colors = (g_color<GLfloat> *)&m_normals[m_point_size];
         if(index_size)
@@ -110,7 +126,7 @@ public:
         m_draw_type = 0;
         m_use_vbo = use_vbo;
     }
-    g_sharp(const g_sharp<GT_TYPE,POS_TYPE> &s)
+    g_sharp(const g_sharp<POS_TYPE> &s)
     {
         m_point_size = s.m_point_size;
         m_draw_type = s.m_draw_type;
@@ -118,11 +134,11 @@ public:
         if(m_point_size)
         {
             assert(s.m_mem);
-            assert(s.m_mem_size==(sizeof(POS_TYPE<GT_TYPE>)+sizeof(POS_TYPE<GLfloat>)+sizeof(g_color<GLfloat>))*s.m_point_size);
+            assert(s.m_mem_size==(sizeof(POS_TYPE)+sizeof(POS_TYPE)+sizeof(g_color<GLfloat>))*s.m_point_size);
             m_mem_size = s.m_mem_size;
             m_mem = malloc(m_mem_size);
             memcpy(m_mem,s.m_mem,m_mem_size);
-            m_vectors = (POS_TYPE<GT_TYPE> *)m_mem;
+            m_vectors = (POS_TYPE *)m_mem;
             m_normals = &m_vectors[m_point_size];
             m_colors = (g_color<GLfloat> *)&m_normals[m_point_size];
             if(m_index_size)
@@ -149,7 +165,7 @@ public:
         if(m_mem)
             free(m_mem);
     }
-    void set_sharp(POS_TYPE<GT_TYPE> * vectors,POS_TYPE<GT_TYPE> *normals,g_color<GT_TYPE> colors,uint32_t point_size)
+    void set_sharp(POS_TYPE * vectors,POS_TYPE *normals,g_color<GLfloat> colors,uint32_t point_size)
     {
         if(m_mem)
             free(m_mem);
@@ -159,17 +175,17 @@ public:
             m_vbo_buf_id = 0xffffffff;
         }
         m_point_size = point_size;
-        m_mem_size = (sizeof(POS_TYPE<GT_TYPE>)+sizeof(POS_TYPE<GLfloat>)+sizeof(g_color<GLfloat>))*m_point_size;
+        m_mem_size = (sizeof(POS_TYPE)+sizeof(POS_TYPE)+sizeof(g_color<GLfloat>))*m_point_size;
         m_mem = malloc(m_mem_size);
-        m_vectors = (POS_TYPE<GT_TYPE> *)m_mem;
+        m_vectors = (POS_TYPE *)m_mem;
         m_normals = &m_vectors[m_point_size];
         m_colors = (g_color<GLfloat> *)&m_normals[m_point_size];
-        memcpy(m_vectors,vectors,sizeof(POS_TYPE<GT_TYPE>)*m_point_size);
-        memcpy(m_normals,normals,sizeof(POS_TYPE<GLfloat>)*m_point_size);
+        memcpy(m_vectors,vectors,sizeof(POS_TYPE)*m_point_size);
+        memcpy(m_normals,normals,sizeof(POS_TYPE)*m_point_size);
         memcpy(m_colors,colors,sizeof(g_color<GLfloat>)*m_point_size);
     }
 private:
-    inline int draw_by_vbo(POS_TYPE<GT_TYPE> *pos,POS_TYPE<GT_TYPE> *dirct)
+    inline int draw_by_vbo(POS_TYPE *pos,POS_TYPE *dirct)
     {
         if(m_vbo_buf_id == 0xffffffff)
         {
@@ -185,8 +201,8 @@ private:
         if(m_indices)
             glEnableClientState(GL_INDEX_ARRAY);
         // before draw, specify vertex and index arrays with their offsets
-        glNormalPointer(GL_FLOAT, 0, (void*)(sizeof(POS_TYPE<GT_TYPE>)*m_point_size));
-        glColorPointer(sizeof(g_color<GLfloat>)/sizeof(GLfloat), GL_FLOAT, 0, (void*)((sizeof(POS_TYPE<GT_TYPE>)+sizeof(POS_TYPE<GLfloat>))*m_point_size));
+        glNormalPointer(GL_FLOAT, 0, (void*)(sizeof(POS_TYPE)*m_point_size));
+        glColorPointer(sizeof(g_color<GLfloat>)/sizeof(GLfloat), GL_FLOAT, 0, (void*)((sizeof(POS_TYPE)+sizeof(POS_TYPE))*m_point_size));
         glVertexPointer(3, GL_FLOAT, 0, 0);
         if(m_indices)
         {
@@ -208,7 +224,7 @@ private:
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         return 0;
     }
-    inline int draw_normal(POS_TYPE<GT_TYPE> *pos,POS_TYPE<GT_TYPE> *dirct)
+    inline int draw_normal(POS_TYPE *pos,POS_TYPE *dirct)
     {
         // enable vertex arrays
         //glEnableClientState(GL_NORMAL_ARRAY);
@@ -237,7 +253,7 @@ private:
         return 0;
     }
 public:
-    void draw(POS_TYPE<GT_TYPE> *pos,POS_TYPE<GT_TYPE> *dirct)
+    void draw(POS_TYPE *pos,POS_TYPE *dirct)
     {
         if(m_mem_size&&m_mem)
         {
@@ -246,19 +262,6 @@ public:
             else
                 draw_normal(pos,dirct);
         }
-    }
-    static void calculate_normal(g_pos_3d<GT_TYPE> & normal,const g_pos_3d<GT_TYPE> &v,const g_pos_3d<GT_TYPE> &v1,const g_pos_3d<GT_TYPE> &v2)
-    {
-        D_SUB_3D_VECTOR(v1_tmp,v1,v);
-        D_SUB_3D_VECTOR(v2_tmp,v2,v);
-
-        normal.x = v1_tmp.y * v2_tmp.z - v1_tmp.z * v2_tmp.y;
-        normal.y = v1_tmp.z * v2_tmp.x - v1_tmp.x * v2_tmp.z;
-        normal.z = v1_tmp.x * v2_tmp.y - v1_tmp.y * v2_tmp.x;
-        GT_TYPE mode = GT_TYPE(1)/sqrt(static_cast<double>(normal.x*normal.x+normal.y*normal.y+normal.z*normal.z));
-        normal.x*=mode;
-        normal.y*=mode;
-        normal.z*=mode;
     }
 };
 

@@ -120,7 +120,6 @@ int world::frame()
 }
 bool world::load_data(const char * file)
 {
-    regular_icosohedron * o = new regular_icosohedron(1.0f,1);
-    insert(m_active_objects,o->get_id(),CREATE_GL_OBJ((uint64_t)o,GL_OBJ_DOUBLE));
+
     return true;
 }

@@ -5,7 +5,6 @@
 #if (!defined _ANDROID) || (!defined _IOS)
 #include <fcntl.h>
 #include <unistd.h>
-#include <error.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>

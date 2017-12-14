@@ -39,7 +39,7 @@ class g_obj
 {
 public:
     uint32_t m_id;
-    g_sharp<GT_TYPE, g_pos_3d> * m_sharp;
+    g_sharp< g_pos_3d<GT_TYPE>> * m_sharp;
     bool m_shape_share;
     char * m_source;
 public:
@@ -54,18 +54,18 @@ public:
         if (m_shape_share && m_sharp)
             delete m_sharp;
     }
-    void set_shape(const g_sharp<GT_TYPE, g_pos_3d> * shape)
+    void set_shape(const g_sharp<g_pos_3d<GT_TYPE>> * shape)
     {
         if (m_sharp != NULL && m_shape_share)
             delete m_sharp;
         m_sharp = shape;
         m_shape_share = true;
     }
-    void set_shape_by_copy(const g_sharp<GT_TYPE, g_pos_3d> * shape)
+    void set_shape_by_copy(const g_sharp< g_pos_3d<GT_TYPE>> * shape)
     {
         if (m_sharp != NULL && m_shape_share)
             delete m_sharp;
-        m_sharp = new g_sharp<GT_TYPE, g_pos_3d>(shape);
+        m_sharp = new g_sharp<g_pos_3d<GT_TYPE>>(shape);
         m_shape_share = false;
     }
     inline uint32_t get_id() {return m_id;}
@@ -83,6 +83,7 @@ public:
 
     static g_obj<GT_TYPE> *load_from_file(const char *file)
     {
+#if 0
         FD_TYPE fd = open_file(file,F_RDONLY);
         if(fd<0)
             return NULL;
@@ -94,6 +95,7 @@ public:
 
         }
         return NULL;
+#endif
     }
 };
 

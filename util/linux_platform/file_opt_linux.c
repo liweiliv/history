@@ -8,7 +8,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <error.h>
 
 int64_t file_read(FD_TYPE fd, unsigned char *buf, uint64_t count)
 {
