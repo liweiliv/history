@@ -11,7 +11,12 @@
 #include "db_chain.h"
 #define ALIGN(x, a)	(((x) + (a) - 1) & ~((a) - 1))
 //#include "spinlock.h"
+#if ((defined  __LINUX__) || ( defined  __MAC__))
 #include <pthread.h>
+#endif
+#ifdef __WINDOWS__
+#include <windows.h>
+#endif
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -248,9 +253,21 @@ static inline mempool_block* get_new_block_4k(mempool *pool)
 static inline void *get_mem(mempool *pool)
 {
 	void *mem;
+#ifdef __MAC__
+	uint64_t tid = 0;
+	if(pool->flags&mem_flag_lock)//��������������
+		pthread_mutex_lock(&pool->hash_lock[(tid=((((uint64_t)pthread_self())%8)&cache_thread_mod))]);
+#endif
+#ifdef __WINDOWS__
+	DWORD tid = 0;
+	if(pool->flags&mem_flag_lock)//��������������
+		pthread_mutex_lock(&pool->hash_lock[(tid=(GetCurrentThreadId()&cache_thread_mod))]);
+#endif
+#ifdef 	__LINUX__
 	pthread_t tid=0;
 	if(pool->flags&mem_flag_lock)//��������������
 		pthread_mutex_lock(&pool->hash_lock[(tid=(pthread_self()&cache_thread_mod))]);
+#endif
 	if(pool->cache[tid]!=NULL)//���cache����ʣ��ģ�ֱ�Ӵ�cache��ȡ
 	{
 		mem=pool->cache[tid];
@@ -337,15 +354,24 @@ static inline void free_mem_small(void *mem)
 {
 	if(unlikely(mem==NULL))
 		return;
-	pthread_t tid=0;
 	mp_4k_buf * buf=(mp_4k_buf*)((unsigned long)mem&(~page_mask));
 	mempool_block * block=buf->block;
 	mempool *pool=block->pool;
+#ifdef __MAC__
+	uint64_t tid = 0;
 	if(pool->flags&mem_flag_lock)
-	{
-		tid=pthread_self()&cache_thread_mod;
-		pthread_mutex_lock(&pool->hash_lock[tid]);
-	}
+		pthread_mutex_lock(&pool->hash_lock[(tid=((((uint64_t)pthread_self())%8)&cache_thread_mod))]);
+#endif
+#ifdef __WINDOWS__
+	DWORD tid = 0;
+	if(pool->flags&mem_flag_lock)
+		pthread_mutex_lock(&pool->hash_lock[(tid=(GetCurrentThreadId()&cache_thread_mod))]);
+#endif
+#ifdef 	__LINUX__
+	pthread_t tid=0;
+	if(pool->flags&mem_flag_lock)
+		pthread_mutex_lock(&pool->hash_lock[(tid=(pthread_self()&cache_thread_mod))]);
+#endif
 	*(void**)mem=pool->cache[tid];
 	pool->cache[tid]=mem;
 	if(++pool->cache_count[tid]>(int)pool->buf_dt_count*2)

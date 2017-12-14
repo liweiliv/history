@@ -2,30 +2,36 @@
  * Copyright (c) 2012, Taobao.com
  * All rights reserved.
  *
- * ÎÄ¼şÃû³Æ£ºlogger.cpp
- * ÕªÒª£ºÏà¶ÔÓÚlog4cppµÄÇáÁ¿¼¶ÈÕÖ¾Êä³ö
- * ×÷Õß£ºBenkong <benkong@taobao.com>
- * ÈÕÆÚ£º2012.7.2
+ * ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Æ£ï¿½logger.cpp
+ * ÕªÒªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½log4cppï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½
+ * ï¿½ï¿½ï¿½ß£ï¿½Benkong <benkong@taobao.com>
+ * ï¿½ï¿½ï¿½Ú£ï¿½2012.7.2
  */
 #include "logger.h"
 #include "INIParser.h"
 #include <stdarg.h>
+
+#include <string.h>
+#include <stdlib.h>
+#if ((defined  __LINUX__) || ( defined  __MAC__))
+#include <pthread.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <time.h>
 #include <sys/stat.h>
-#include <string.h>
-#include <stdlib.h>
-
-#define DEFAULT_TIMEFMT "%Y-%m-%d %H:%M:%S" /* È±Ê¡Ê±¼ä¸ñÊ½ */
+#endif
+#ifdef __WINDOWS__
+#include<windows.h>
+#endif
+#define DEFAULT_TIMEFMT "%Y-%m-%d %H:%M:%S" /* È±Ê¡Ê±ï¿½ï¿½ï¿½Ê½ */
 #define STD_PREFIX   "std"
 
 #define _1K   1024
 #define _1M   (_1K*_1K)
 #define SECS_IN_1MIN  60
 #define MINS_IN_1HOUR 60
-#define DEFAULT_SWITCH_SIZE   _1K // È±Ê¡ÂÖ»»´óĞ¡1K M == 1G 
-#define MAX_SWITCH_SIZE   (2*_1K) // ×î´óµÄÂÖ»»´óĞ¡ 2G 
+#define DEFAULT_SWITCH_SIZE   _1K // È±Ê¡ï¿½Ö»ï¿½ï¿½ï¿½Ğ¡1K M == 1G 
+#define MAX_SWITCH_SIZE   (2*_1K) // ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½Ğ¡ 2G 
 
 #define DEFAULT_ROLLING_NUM 7
 #define MAX_ROLLING_NUM 255
@@ -36,27 +42,27 @@
 #define MAX_LOG_LEN  512
 #define MAX_FMT_TIME_LEN 48
 
-// ÈÕÖ¾Êä³öÑ¡Ïî¶¨Òå£¬¶à¸öÖµ¿ÉÒÔÍ¨¹ı"»ò"Ò»Æğ´«µİ
+// ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½Ñ¡ï¿½î¶¨ï¿½å£¬ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½"ï¿½ï¿½"Ò»ï¿½ğ´«µï¿½
 enum LLO_T
 {
-	LLO_LEVEL_MASK      = 0x0000000F,  // ÈÕÖ¾¼¶±ğÑÚÂë
+	LLO_LEVEL_MASK      = 0x0000000F,  // ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-	LLO_SWITCH_BY_TIME  = 0x00000010,  // ÈÕÖ¾ÒÔÊ±¼ä½øĞĞÂÖ»»Êä³ö
-	LLO_SWITCH_BY_SIZE  = 0x00000020,  // ÈÕÖ¾ÒÔ´óĞ¡½øĞĞÂÖ»»Êä³ö£¬Í¬Ê±ĞèÖ¸Ã÷ÂÖ»»´óĞ¡
+	LLO_SWITCH_BY_TIME  = 0x00000010,  // ï¿½ï¿½Ö¾ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½
+	LLO_SWITCH_BY_SIZE  = 0x00000020,  // ï¿½ï¿½Ö¾ï¿½Ô´ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬Ê±ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½Ğ¡
 
-	LLO_OUTPUT_LEVEL    = 0x00000100,  // Êä³öÈÕÖ¾µÄ¼¶±ğ
-	LLO_OUTPUT_PID      = 0x00000200,  // Êä³öpid±êÖ¾ 
-	LLO_OUTPUT_FILELINE = 0x00000400,  // Êä³öÎÄ¼şÃûºÍĞĞºÅ
-	LLO_OUTPUT_PRGNAME  = 0x00000800,  // Êä³ö³ÌĞòÃûºÍÄ£¿éÃû
+	LLO_OUTPUT_LEVEL    = 0x00000100,  // ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½Ä¼ï¿½ï¿½ï¿½
+	LLO_OUTPUT_PID      = 0x00000200,  // ï¿½ï¿½ï¿½pidï¿½ï¿½Ö¾ 
+	LLO_OUTPUT_FILELINE = 0x00000400,  // ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğºï¿½
+	LLO_OUTPUT_PRGNAME  = 0x00000800,  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½
 
-	// ³ıÁËLLO_OUTPUT_LEVELµÄÊä³öÑÚÂë
+	// ï¿½ï¿½ï¿½ï¿½LLO_OUTPUT_LEVELï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	LLO_OUTPUT_MASK     = LLO_OUTPUT_PID|LLO_OUTPUT_FILELINE|LLO_OUTPUT_PRGNAME, 
 	
-	LLO_ROLLING_NUM_MASK= 0x000FF000,  // ¹ö¶¯¼ÆÊıÑÚÂë£¬×î¶à255¸ö
-	LLO_ROLLING_SHIFT   = 12,          // ¹ö¶¯¼ÆÊı×óÒÆÎ»Êı
+	LLO_ROLLING_NUM_MASK= 0x000FF000,  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë£¬ï¿½ï¿½ï¿½255ï¿½ï¿½
+	LLO_ROLLING_SHIFT   = 12,          // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
 };
 
-// ÈÕÖ¾¼¶±ğ×Ö·û´®
+// ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
 static const char* LOG_LEVEL[] = {
 	NULL,
 	"DEBUG",
@@ -71,18 +77,18 @@ static const char* LOG_LEVEL[] = {
 
 struct LogData
 {
-	bool   m_usingStd; // ÊÇ·ñÊä³öµ½±ê×¼Éè±¸? 
-	FILE*  m_fLog;     // ÈÕÖ¾ÎÄ¼ş
-	time_t m_logTime;  // Êä³öÈÕÖ¾µÄÊ±¼ä
+	bool   m_usingStd; // ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¼ï¿½è±¸? 
+	FILE*  m_fLog;     // ï¿½ï¿½Ö¾ï¿½Ä¼ï¿½
+	time_t m_logTime;  // ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½Ê±ï¿½ï¿½
 	pthread_mutex_t m_mutexLog;
 	
-	// ºÍ´óĞ¡ÂÖ»»Ïà¹ØµÄ²ÎÊı
-	unsigned m_currNo;  // µ±Ç°ÈÕÖ¾ĞòºÅ
-	size_t m_size;      // µ±Ç°ÈÕÖ¾´óĞ¡ 
+	// ï¿½Í´ï¿½Ğ¡ï¿½Ö»ï¿½ï¿½ï¿½ØµÄ²ï¿½ï¿½ï¿½
+	unsigned m_currNo;  // ï¿½ï¿½Ç°ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½
+	size_t m_size;      // ï¿½ï¿½Ç°ï¿½ï¿½Ö¾ï¿½ï¿½Ğ¡ 
 	
-	// ºÍÊ±¼äÂÖ»»Ïà¹Ø
-	time_t m_rotateTime; // ÂÖ»»Ê±¼ä
-	char m_time[MAX_FMT_TIME_LEN];     // Ê±¼ä×Ö·û´®
+	// ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½
+	time_t m_rotateTime; // ï¿½Ö»ï¿½Ê±ï¿½ï¿½
+	char m_time[MAX_FMT_TIME_LEN];     // Ê±ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
 
 	LogData(): m_usingStd(false), m_fLog(NULL), m_currNo(0), m_size(0)
 	{
@@ -121,17 +127,17 @@ struct LogData
 	}
 };
 
-/* ÈÕÖ¾¾ä±ú½á¹¹¶¨Òå */
+/* ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ */
 struct LogHandle
 {
 	int  m_options;
 	std::string m_path;
 	std::string m_prefix;
 	std::string m_timeFmt;
-	size_t   m_switchSize; // ÂÖ»»´óĞ¡ »ò ÂÖ»»Ê±¼ä
-	size_t   m_switchMins; // ÂÖ»»Ê±¼ä¼ä¸ô£¬·ÖÖÓ
+	size_t   m_switchSize; // ï¿½Ö»ï¿½ï¿½ï¿½Ğ¡ ï¿½ï¿½ ï¿½Ö»ï¿½Ê±ï¿½ï¿½
+	size_t   m_switchMins; // ï¿½Ö»ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	int      m_baseLevel;
-	unsigned m_rollingNum; // ÈÕÖ¾¹ö¶¯ÊıÄ¿£¬0±íÊ¾²»¹ö¶¯
+	unsigned m_rollingNum; // ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½0ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 	std::string m_prgName;
 	std::string m_modName;
@@ -141,7 +147,7 @@ struct LogHandle
 	LogHandle():m_options(0) {}
 };
 
-/* ´´½¨ÈÕÖ¾ÎÄ¼ş */
+/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½Ä¼ï¿½ */
 static int createLogFile(char *file, LogHandle *log)
 {
 	LogData *logData = &(log->m_logData);
@@ -150,7 +156,7 @@ static int createLogFile(char *file, LogHandle *log)
 
 	if (logData->m_usingStd)
 	{
-		// Ê¹ÓÃ±ê×¼Êä³öÉè±¸
+		// Ê¹ï¿½Ã±ï¿½×¼ï¿½ï¿½ï¿½ï¿½è±¸
 		logData->m_fLog = stdout;
 		return 0;
 	}
@@ -159,9 +165,9 @@ static int createLogFile(char *file, LogHandle *log)
 	const char *prefix = log->m_prefix.c_str();
 	if (log->m_options & LLO_SWITCH_BY_SIZE)
 	{
-		// ÎÄ¼şÒÔ´óĞ¡ÂÖ»»
+		// ï¿½Ä¼ï¿½ï¿½Ô´ï¿½Ğ¡ï¿½Ö»ï¿½
 		struct stat sb;
-		int len; // fileÖĞÒÑÓĞµÄ×Ö·û³¤¶È
+		int len; // fileï¿½ï¿½ï¿½ï¿½ï¿½Ğµï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½
 	
 		len = sprintf(file, "%s/%s_", path, prefix);
 		do
@@ -189,15 +195,15 @@ static int createLogFile(char *file, LogHandle *log)
 		
 		if (logData->m_currNo >= log->m_rollingNum)
 		{
-			// ÓĞÈÕÖ¾ÊıÄ¿¹ö¶¯
+			// ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½
 			char oldFile[MAX_PATH_LEN];
 			memcpy(oldFile, file, len);
 
-			// É¾³ı0ºÅÈÕÖ¾
+			// É¾ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½Ö¾
 			sprintf(file+len, "%d", 0);
 			remove(file);
 
-			// #1 ~ #(log->m_rollingNum-1)ºÅÈÕÖ¾¸ÄÃû
+			// #1 ~ #(log->m_rollingNum-1)ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½
 			for (unsigned i=1; i<log->m_rollingNum; i++)
 			{
 				sprintf(oldFile+len, "%u", i);
@@ -215,10 +221,10 @@ static int createLogFile(char *file, LogHandle *log)
 	}
 	else if (log->m_options & LLO_SWITCH_BY_TIME)
 	{
-		// ÎÄ¼şÒÔÊ±¼äÂÖ»»
+		// ï¿½Ä¼ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ö»ï¿½
 		struct tm t;
 		localtime_r(&(logData->m_logTime), &t);
-		int mins = (t.tm_hour * MINS_IN_1HOUR + t.tm_min) / log->m_switchMins * log->m_switchMins; // ÂÖ»»ÎÄ¼ş»ù×¼Ê±¼ä
+		int mins = (t.tm_hour * MINS_IN_1HOUR + t.tm_min) / log->m_switchMins * log->m_switchMins; // ï¿½Ö»ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½×¼Ê±ï¿½ï¿½
 		int hour = mins / MINS_IN_1HOUR;
 		int min  = mins % MINS_IN_1HOUR;
 		sprintf(file, "%s/%s_%04d%02d%02d-%02d:%02d:00", path, prefix, t.tm_year+1900, t.tm_mon+1, t.tm_mday, hour, min);
@@ -229,18 +235,18 @@ static int createLogFile(char *file, LogHandle *log)
 		t.tm_hour = hour;
 		t.tm_min  = min;
 		t.tm_sec  = 0;
-		logData->m_rotateTime = mktime(&t); // ÏÂÒ»¸öÂÖ»»Ê±¼ä
+		logData->m_rotateTime = mktime(&t); // ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ö»ï¿½Ê±ï¿½ï¿½
 	}
 	else
 	{
-		// ÈÕÖ¾²»ÂÖ»»
+		// ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½Ö»ï¿½
 		sprintf(file, "%s/%s", path, prefix);
 	}
 	
 	logData->m_fLog = fopen(file, "a");
 	if (logData->m_fLog == NULL)
 	{
-		return 1; // ´´½¨ÎÄ¼şÊ§°Ü 
+		return 1; // ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ê§ï¿½ï¿½ 
 	}
 	
 	setvbuf(logData->m_fLog, NULL, _IONBF, 0);
@@ -265,7 +271,7 @@ int Logger::init(const char *logPath, const char *filePrefix, int options, const
 	
 	if ((options & (LLO_SWITCH_BY_SIZE|LLO_SWITCH_BY_TIME)) == 0)
 	{
-		// ÔÚÎ´Ö¸Ã÷ÂÖ»»·½Ê½Ê±Ê¹ÓÃ´óĞ¡ÂÖ»»
+		// ï¿½ï¿½Î´Ö¸ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½Ê½Ê±Ê¹ï¿½Ã´ï¿½Ğ¡ï¿½Ö»ï¿½
 		options |= LLO_SWITCH_BY_SIZE;
 		switchSize = DEFAULT_SWITCH_SIZE;
 	}
@@ -284,7 +290,7 @@ int Logger::init(const char *logPath, const char *filePrefix, int options, const
 		// m_log->m_switchSize = switchSize * SECS_IN_1MIN;
 	}
 	
-	// ¸´ÖÆ³õÊ¼»¯ĞÅÏ¢
+	// ï¿½ï¿½ï¿½Æ³ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Ï¢
 	m_log->m_path.assign(logPath);
 	m_log->m_prefix.assign(filePrefix);
 	m_log->m_logData.m_usingStd = !strcasecmp(STD_PREFIX, filePrefix);
@@ -295,24 +301,24 @@ int Logger::init(const char *logPath, const char *filePrefix, int options, const
 
 	if (0 != createLogFile(file, m_log))
 	{
-		return 1; // ´´½¨ÈÕÖ¾ÎÄ¼şÊ§°Ü 
+		return 1; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½Ä¼ï¿½Ê§ï¿½ï¿½ 
 	}
 	
-	// È¡»ù±¾ÈÕÖ¾¼¶±ğ
+	// È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½
 	m_log->m_baseLevel = options & LLO_LEVEL_MASK;
 	if (m_log->m_baseLevel <= L_MIN_LEVEL || m_log->m_baseLevel >= TOTAL_LEVEL)
 	{
 		m_log->m_baseLevel = L_INFO;
 	}
 	
-	// ³É¹¦·µ»Ø
+	// ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½
 	return 0; 
 }
 
 /**
- * °Ñ±íÊ¾×Ö·û´®µÄÈÕÖ¾»ù±¾×ª»»Îª¶ÔÓ¦µÄÊı×Ö
- * @param szLevel ÈÕÖ¾¼¶±ğ£¬Èç"INFO"/"DEBUG"µÈ
- * @return Èç¹ûszLevelºÏ·¨£¬·µ»ØÏàÓ¦µÄÊı×Ö; Èç¹ûszLevel²»ºÏ·¨£¬·µ»Ø0
+ * ï¿½Ñ±ï¿½Ê¾ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @param szLevel ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"INFO"/"DEBUG"ï¿½ï¿½
+ * @return ï¿½ï¿½ï¿½szLevelï¿½Ï·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½; ï¿½ï¿½ï¿½szLevelï¿½ï¿½ï¿½Ï·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0
  */
 int Logger::strToLevel(const char* level)
 {
@@ -326,23 +332,23 @@ int Logger::strToLevel(const char* level)
 }
 
 /**
- * Í¨¹ıÅäÖÃÎÄ¼ş³õÊ¼»¯ÈÕÖ¾
- * @param profile   ÈÕÖ¾ÅäÖÃÎÄ¼şÃû
- * @param section   ÅäÖÃÎÄ¼şÇøÓòÃû³Æ
- * @return ·ÇNULL£º³É¹¦; NULL: ³õÊ¼»¯Ê§°Ü
+ * Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Ö¾
+ * @param profile   ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½
+ * @param section   ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @return ï¿½ï¿½NULLï¿½ï¿½ï¿½É¹ï¿½; NULL: ï¿½ï¿½Ê¼ï¿½ï¿½Ê§ï¿½ï¿½
  *
- * ÅäÖÃÎÄ¼ş±ØĞëÓĞÈçÏÂ¸ñÊ½
+ * ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¸ï¿½Ê½
  * [log]
- * root_path  = .     # ÈÕÖ¾¸ùÂ·¾¶
- * prefix     = std   # ÈÕÖ¾ÎÄ¼şÃûÇ°×º£¬Èç¹ûÎª"std"£¬ÔòÊä³öµ½±ê×¼Éè±¸
- * show_pid   = YES   # ÊÇ·ñÊä³öpid£¬¿ÉÈ¡ÖµYES/NO
- * show_line  = YES   # ÊÇ·ñÊä³öÎÄ¼şÃû/ĞĞºÅ£¬¿ÉÈ¡Ö®YES/NO
- * base_level = TRACE # »ù±¾Êä³öÈÕÖ¾¼¶±ğ£¬¿ÉÈ¡Öµ´ÓµÍµ½¸ßÓĞDEBUG/INFO/NOTICE/WARN/ERROR/CRIT/FATAL
- * show_level = YES   # ÊÇ·ñÊä³ö¼¶±ğĞÅÏ¢£¬¿ÉÈ¡ÖµÓĞYES/NO
- * switch_by  = SIZE  # ÂÖ»»·½Ê½£¬¿ÉÈ¡ÖµSIZE/TIME
- * switch_size= 100   # ÂÖ»»ÎÄ¼ş´óĞ¡£¬µ±switch_byÎªsizeÊ±ÓĞĞ§£¬µ¥Î»ÎªM£¬×îĞ¡Îª10
- * max_fileage= 1440  # Ê±¼äÂÖ»»ÖÜÆÚ£¬µ±switch_byÎªtimeÊ±ÓĞĞ§£¬µ¥Î»Îª¡°·ÖÖÓ¡±, ×î´ó1440
- * rolling_num= 7     # ÈÕÖ¾ÊıÒÔ¹ö¶¯¼ÆÊı£¬×î¶à255¸ö£¬È±Ê¡Îª7
+ * root_path  = .     # ï¿½ï¿½Ö¾ï¿½ï¿½Â·ï¿½ï¿½
+ * prefix     = std   # ï¿½ï¿½Ö¾ï¿½Ä¼ï¿½ï¿½ï¿½Ç°×ºï¿½ï¿½ï¿½ï¿½ï¿½Îª"std"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¼ï¿½è±¸
+ * show_pid   = YES   # ï¿½Ç·ï¿½ï¿½ï¿½ï¿½pidï¿½ï¿½ï¿½ï¿½È¡ÖµYES/NO
+ * show_line  = YES   # ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½/ï¿½ĞºÅ£ï¿½ï¿½ï¿½È¡Ö®YES/NO
+ * base_level = TRACE # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ğ£¬¿ï¿½È¡Öµï¿½ÓµÍµï¿½ï¿½ï¿½ï¿½ï¿½DEBUG/INFO/NOTICE/WARN/ERROR/CRIT/FATAL
+ * show_level = YES   # ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½È¡Öµï¿½ï¿½YES/NO
+ * switch_by  = SIZE  # ï¿½Ö»ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½È¡ÖµSIZE/TIME
+ * switch_size= 100   # ï¿½Ö»ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½switch_byÎªsizeÊ±ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½ï¿½Î»ÎªMï¿½ï¿½ï¿½ï¿½Ğ¡Îª10
+ * max_fileage= 1440  # Ê±ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½ï¿½switch_byÎªtimeÊ±ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½ï¿½Î»Îªï¿½ï¿½ï¿½ï¿½ï¿½Ó¡ï¿½, ï¿½ï¿½ï¿½1440
+ * rolling_num= 7     # ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½Ô¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½255ï¿½ï¿½ï¿½ï¿½È±Ê¡Îª7
  */
 Logger* Logger::createLoggerFromProfile(const char *profile, const char *section)
 {
@@ -450,7 +456,7 @@ Logger* Logger::createLoggerFromProfile(const char *profile, const char *section
 	return log;
 }
 
-// µ÷ÓÃlogImplµÄ²ÎÊı
+// ï¿½ï¿½ï¿½ï¿½logImplï¿½Ä²ï¿½ï¿½ï¿½
 struct LogParam
 {
 	const char* m_fileName;
@@ -466,18 +472,18 @@ struct LogParam
 	{}
 };
 
-// Êä³öµ½±ê×¼Éè±¸
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¼ï¿½è±¸
 static void stdLog(LogParam *logParam)
 {
 	FILE* out = logParam->m_logData->m_fLog;
 	LogHandle *log = logParam->m_log;
 	LogData *logData = logParam->m_logData;
 	
-	// Êä³öÊ±¼ä
+	// ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
 	logData->getCurrTime(log->m_timeFmt.c_str());
 	fprintf(out, "%s ", logData->m_time);
 	
-	// Êä³öÈÕÖ¾¼¶±ğ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½
 	if (log->m_options & LLO_OUTPUT_LEVEL)
 	{
 		fprintf(out, "[%s]: ", LOG_LEVEL[logParam->m_level]);
@@ -488,32 +494,40 @@ static void stdLog(LogParam *logParam)
 		fprintf(out, "(");
 		if ((log->m_options & LLO_OUTPUT_PRGNAME))
 		{
-			// Êä³ö³ÌĞòÃû¡¢Ä£¿éÃû£¬¾Í²»ÔÙÊä³öÎÄ¼şÃû¡¢ĞĞºÅÁË
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğºï¿½ï¿½ï¿½
 			fprintf(out, "%s,%s ", log->m_prgName.c_str(), log->m_modName.c_str());
 		}
 		else if ((log->m_options & LLO_OUTPUT_FILELINE) && (logParam->m_fileName != NULL))
 		{
-			// Êä³öÎÄ¼şÃûºÍĞĞºÅ
+			// ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğºï¿½
 			fprintf(out, "%s:%d ", logParam->m_fileName, logParam->m_line);
 		}
 		if (log->m_options & LLO_OUTPUT_PID)
 		{
-			// ĞèÒªÊä³öpid 
+			// ï¿½ï¿½Òªï¿½ï¿½ï¿½pid 
+#ifdef __LINUX__
 			fprintf(out, "%u,%u", getpid(), (unsigned)pthread_self());
+#endif
+#ifdef __MAC__
+			fprintf(out, "%u,%lu", getpid(), (unsigned long)pthread_self());
+#endif
+#ifdef __WINDOWS__
+			fprintf(out, "%lu,%lu", GetCurrentProcessId(), GetCurrentThreadId());
+#endif
 		}
 		fprintf(out, ") ");
 	}
 
-	// Êä³öÓÃ»§×Ô¶¨ÒåĞÅÏ¢ 
+	// ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ 
 	fprintf(out, "%s\n", logParam->m_msg);
 }
 
-// Êä³öÈÕÖ¾
+// ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾
 static int logImpl(LogParam* logParam)
 {
 	char file[MAX_PATH_LEN];
-	char logStr[MAX_LOG_LEN]; // ±£´æµ±Ç°ÈÕÖ¾
-	char *tmpLog = NULL;      // µ±Ç°ÈÕÖ¾´óÓÚMAX_LOG_LENÊ±£¬¶¯Ì¬ÉêÇë¿Õ¼ä±£´æµ±Ç°ÈÕÖ¾
+	char logStr[MAX_LOG_LEN]; // ï¿½ï¿½ï¿½æµ±Ç°ï¿½ï¿½Ö¾
+	char *tmpLog = NULL;      // ï¿½ï¿½Ç°ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½MAX_LOG_LENÊ±ï¿½ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½Õ¼ä±£ï¿½æµ±Ç°ï¿½ï¿½Ö¾
 	int logLen = 0;
 	LogHandle *log = logParam->m_log;
 	LogData* logData = logParam->m_logData;
@@ -524,14 +538,14 @@ static int logImpl(LogParam* logParam)
 		return 0;
 	}
 	
-	// ºÏ³ÉÈÕÖ¾
+	// ï¿½Ï³ï¿½ï¿½ï¿½Ö¾
 	logLen = 0;
 
-	// Êä³öÊ±¼ä
+	// ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
 	logData->getCurrTime(log->m_timeFmt.c_str());
 	logLen += sprintf(logStr + logLen, "%s ", logData->m_time);
 	
-	// Êä³öÈÕÖ¾¼¶±ğ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½
 	if (log->m_options & LLO_OUTPUT_LEVEL)
 	{
 		logLen += sprintf(logStr + logLen, "[%s]: ", LOG_LEVEL[logParam->m_level]);
@@ -543,23 +557,31 @@ static int logImpl(LogParam* logParam)
 
 		if ((log->m_options & LLO_OUTPUT_PRGNAME))
 		{
-			// Êä³ö³ÌĞòÃû¡¢Ä£¿éÃû£¬¾ÍÔÙÊä³öÎÄ¼şÃû¡¢ĞĞºÅÁË
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğºï¿½ï¿½ï¿½
 			logLen += sprintf(logStr + logLen, "%s,%s ", log->m_prgName.c_str(), log->m_modName.c_str());
 		}
 		else if ((log->m_options & LLO_OUTPUT_FILELINE) && (logParam->m_fileName != NULL))
 		{
-			// Êä³öÎÄ¼şÃûºÍĞĞºÅ
+			// ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğºï¿½
 			logLen += sprintf(logStr + logLen, "%s:%d ", logParam->m_fileName, logParam->m_line);
 		}
 		if (log->m_options & LLO_OUTPUT_PID)
 		{
-			// ĞèÒªÊä³öpid
+			// ï¿½ï¿½Òªï¿½ï¿½ï¿½pid
+#ifdef __LINUX__
 			logLen += sprintf(logStr + logLen, "%u,%u", getpid(), (unsigned)pthread_self());
+#endif
+#ifdef __MAC__
+			logLen += sprintf(logStr + logLen, "%u,%lu", getpid(), (unsigned long)pthread_self());
+#endif
+#ifdef __WINDOWS__
+			logLen += sprintf(logStr + logLen, "%lu,%lu", GetCurrentProcessId(), GetCurrentThreadId());
+#endif
 		}
 		logLen += sprintf(logStr + logLen, ") ");
 	}
 	
-	// °ÑÈÕÖ¾ºÏ³ÉÍêÕûµÄ×Ö·û´®
+	// ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½Ï³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
 	if (logLen + logParam->m_msgLen + 1 < MAX_LOG_LEN)
 	{
 		memcpy(logStr+logLen, logParam->m_msg, logParam->m_msgLen);
@@ -568,17 +590,17 @@ static int logImpl(LogParam* logParam)
 	}
 	else
 	{
-		// µ±Ç°ÈÕÖ¾´óÓÚMAX_LOG_LEN 
+		// ï¿½ï¿½Ç°ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½MAX_LOG_LEN 
 		tmpLog = (char*)malloc(logLen + logParam->m_msgLen+1);
 		if (tmpLog == NULL)
-			return 1; // ÉêÇëÄÚ´æÊ§°Ü
+			return 1; // ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Ê§ï¿½ï¿½
 		memcpy(tmpLog, logStr, logLen);
 		memcpy(tmpLog+logLen, logParam->m_msg, logParam->m_msgLen);
 		logLen += logParam->m_msgLen;;
 		tmpLog[logLen++] = '\n';
 	}
 
-	// ÅĞ¶ÏÊÇ·ñĞèÒªÊ±¼äÂÖ»»
+	// ï¿½Ğ¶ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ÒªÊ±ï¿½ï¿½ï¿½Ö»ï¿½
 	if (log->m_options & LLO_SWITCH_BY_TIME)
 	{
 		if (logData->m_logTime >= logData->m_rotateTime)
@@ -587,23 +609,23 @@ static int logImpl(LogParam* logParam)
 			logData->m_fLog = NULL;
 			logData->m_size = 0;
 			
-			// Éú³ÉĞÂµÄÈÕÖ¾ÎÄ¼ş
+			// ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½Ö¾ï¿½Ä¼ï¿½
 			if (!createLogFile(file, log))
 			{
 				if (tmpLog != NULL)
 					free(tmpLog);
-				return 2; // ´´½¨ÈÕÖ¾ÎÄ¼şÊ§°Ü
+				return 2; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½Ä¼ï¿½Ê§ï¿½ï¿½
 			}
 		}
 	}
 	
-	// Êä³öµ½ÈÕÖ¾ÎÄ¼ş
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½Ä¼ï¿½
 	fwrite(tmpLog?tmpLog:logStr, 1, logLen, logData->m_fLog);
 	if (tmpLog != NULL)
 		free(tmpLog);
 	logData->m_size += logLen;
 	
-	// ÊÇ·ñĞèÒª´óĞ¡ÂÖ»»
+	// ï¿½Ç·ï¿½ï¿½ï¿½Òªï¿½ï¿½Ğ¡ï¿½Ö»ï¿½
 	if ((log->m_options & LLO_SWITCH_BY_SIZE) && (logData->m_size >= log->m_switchSize))
 	{
 		fclose(logData->m_fLog);
@@ -612,19 +634,19 @@ static int logImpl(LogParam* logParam)
 		logData->m_currNo++;
 		
 		if (!createLogFile(file, log))
-			return 3; // ´´½¨ÎÄ¼şÊ§°Ü
+			return 3; // ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ê§ï¿½ï¿½
 	}
 	
 	return 0;
 }
 
 /**
- * Êä³öÈÕÖ¾£¬´ø"_r"ÎªÏß³Ì°²È«µÄº¯Êı
- * @param fileName  µ÷ÓÃ¸Ãº¯ÊıµÄÔ´ÎÄ¼şÃû
- * @param lineNo    µ÷ÓÃ¸Ãº¯ÊıµÄÔ´ÎÄ¼şĞĞºÅ
- * @param level     ÈÕÖ¾¼¶±ğ
- * @param format    Êä³öÈÕÖ¾µÄ¸ñÊ½»¯´®£¬²Î¿¼printf
- * @return 0: ³É¹¦; <0: ¸÷ÖÖ´íÎóÂë
+ * ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½"_r"Îªï¿½ß³Ì°ï¿½È«ï¿½Äºï¿½ï¿½ï¿½
+ * @param fileName  ï¿½ï¿½ï¿½Ã¸Ãºï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½Ä¼ï¿½ï¿½ï¿½
+ * @param lineNo    ï¿½ï¿½ï¿½Ã¸Ãºï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½Ä¼ï¿½ï¿½Ğºï¿½
+ * @param level     ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½
+ * @param format    ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½Ä¸ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¿ï¿½printf
+ * @return 0: ï¿½É¹ï¿½; <0: ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ï¿½ï¿½
  */
 int Logger::log(const char *fileName, int lineNo, int level, const char *format, ...)
 {
@@ -634,13 +656,13 @@ int Logger::log(const char *fileName, int lineNo, int level, const char *format,
 	int ret;
 	
 	if (format == NULL)
-		return 1; // ²ÎÊı´íÎó
+		return 1; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	
-	// ¼ì²éÈÕÖ¾¼¶±ğ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½
 	if (level <= L_MIN_LEVEL || level >= TOTAL_LEVEL || level < m_log->m_baseLevel)
 		return 0;
 	
-	// ºÏ³É×Ô¶¨ÒåÈÕÖ¾
+	// ï¿½Ï³ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾
 	va_start(ap, format);
 	msgLen = vasprintf(&msg, format, ap);
 	va_end(ap);
@@ -661,13 +683,13 @@ int Logger::log_r(const char *fileName, int lineNo, int level, const char *forma
 	int ret;
 	
 	if (format == NULL)
-		return 1; // ²ÎÊı´íÎó
+		return 1; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	
-	// ¼ì²éÈÕÖ¾¼¶±ğ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½
 	if (level <= L_MIN_LEVEL || level >= TOTAL_LEVEL || level < m_log->m_baseLevel)
 		return 0;
 	
-	// ºÏ³É×Ô¶¨ÒåÈÕÖ¾
+	// ï¿½Ï³ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾
 	va_start(ap, format);
 	msgLen = vasprintf(&msg, format, ap);
 	va_end(ap);
@@ -684,11 +706,11 @@ int Logger::log_r(const char *fileName, int lineNo, int level, const char *forma
 }
 
 /**
- * Êä³öÈÕÖ¾(×ª·¢ÆäËü½Ó¿ÚµÄµ÷ÓÃ)£¬´ø"_r"ÎªÏß³Ì°²È«µÄº¯Êı
- * @param level     ÈÕÖ¾¼¶±ğ
- * @param format    Êä³öÈÕÖ¾µÄ¸ñÊ½»¯´®£¬²Î¿¼printf
- * @param ap        ÆäËü½Ó¿ÚµÄ¿É±ä²ÎÊıÁĞ±í
- * @return 0: ³É¹¦; <0: ¸÷ÖÖ´íÎóÂë
+ * ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾(×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿ÚµÄµï¿½ï¿½ï¿½)ï¿½ï¿½ï¿½ï¿½"_r"Îªï¿½ß³Ì°ï¿½È«ï¿½Äºï¿½ï¿½ï¿½
+ * @param level     ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½
+ * @param format    ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½Ä¸ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¿ï¿½printf
+ * @param ap        ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿ÚµÄ¿É±ï¿½ï¿½ï¿½ï¿½ï¿½Ğ±ï¿½
+ * @return 0: ï¿½É¹ï¿½; <0: ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ï¿½ï¿½
  */
 int Logger::log(  int level, const char *format, va_list &ap)
 {
@@ -697,13 +719,13 @@ int Logger::log(  int level, const char *format, va_list &ap)
 	int ret;
 	
 	if (format == NULL)
-		return 1; // ²ÎÊı´íÎó
+		return 1; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	
-	// ¼ì²éÈÕÖ¾¼¶±ğ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½
 	if (level <= L_MIN_LEVEL || level >= TOTAL_LEVEL || level < m_log->m_baseLevel)
 		return 0;
 	
-	// ºÏ³É×Ô¶¨ÒåÈÕÖ¾
+	// ï¿½Ï³ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾
 	msgLen = vasprintf(&msg, format, ap);
 	if (msgLen == -1)
 		return 2;
@@ -722,13 +744,13 @@ int Logger::log_r(int level, const char *format, va_list &ap)
 	int ret;
 	
 	if (format == NULL)
-		return 1; // ²ÎÊı´íÎó
+		return 1; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	
-	// ¼ì²éÈÕÖ¾¼¶±ğ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½
 	if (level <= L_MIN_LEVEL || level >= TOTAL_LEVEL || level < m_log->m_baseLevel)
 		return 0;
 	
-	// ºÏ³É×Ô¶¨ÒåÈÕÖ¾
+	// ï¿½Ï³ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾
 	msgLen = vasprintf(&msg, format, ap);
 	if (msgLen == -1)
 		return 2;
@@ -743,9 +765,9 @@ int Logger::log_r(int level, const char *format, va_list &ap)
 }
 
 /**
- * ÖØĞÂÉèÖÃ»ù±¾Êä³ö¼¶±ğ
- * @param baseLevel »ù±¾Êä³ö¼¶±ğ
- * @return 0: ´íÎó; >0: ¾ÉµÄ»ù±¾Êä³ö¼¶±ğ
+ * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @param baseLevel ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @return 0: ï¿½ï¿½ï¿½ï¿½; >0: ï¿½ÉµÄ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
  */
 int Logger::setBaseLevel(int baseLevel)
 {
@@ -758,9 +780,9 @@ int Logger::setBaseLevel(int baseLevel)
 }
 
 /**
- * ÖØĞÂÉèÖÃÈÕÖ¾¹ö¶¯¸öÊı
- * @param rollingNum ÈÕÖ¾¹ö¶¯¸öÊı
- * return <0: ´íÎó; >=0: ¾ÉµÄÈÕÖ¾¹ö¶¯¸öÊı
+ * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @param rollingNum ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * return <0: ï¿½ï¿½ï¿½ï¿½; >=0: ï¿½Éµï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
  */
 int Logger::setRollingNum(int rollingNum)
 {
@@ -773,8 +795,8 @@ int Logger::setRollingNum(int rollingNum)
 }
 
 /**
- * Ä£Äâlog4cpp¶øÒıÈë
- * @param prgName ³ÌĞòÃû
+ * Ä£ï¿½ï¿½log4cppï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @param prgName ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
  * @param modName
  */
 void Logger::setPrgAndModName(const char *prgName, const char *modName)
