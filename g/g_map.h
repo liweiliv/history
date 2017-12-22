@@ -34,6 +34,10 @@
 class map_obj;
 struct _quadtree;
 struct _quadtree_node ;
+
+template<typename GT_TYPE>
+struct g_pos_3d;
+
 class g_map
 {
 protected:
@@ -52,11 +56,7 @@ protected:
 public:
     constexpr static const double icosohedron_x = 0.525731112119133606f;
     constexpr static const double icosohedron_z = 0.850650808352039932f;
-//#if  !(defined __MAC__)
 
-//#else
-
-//#endif
 private:
     static void destroy_map(void* v);
     void create_sub_triangler(struct _quadtree * tree,struct _quadtree_node * node);
@@ -65,6 +65,7 @@ public:
     ~g_map();
     void draw(int level = 3);
     struct _quadtree_node * coordinate2quadtree_node(float longitude ,float latitude,int level);
+    struct _quadtree_node * get_sub_trangler_by_pos(struct _quadtree * tree,_quadtree_node * node,g_pos_3d<float>  *p);
 };
 
 

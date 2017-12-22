@@ -342,6 +342,7 @@ static inline void *get_mem(mempool *pool)
 	}
 	return mem;
 }
+#ifdef DEBUG
 static int is_good(mempool *pool)
 {
 	if(pool->using_block_list.count>2)
@@ -350,6 +351,7 @@ static int is_good(mempool *pool)
 		return 1;
 	return 0;
 }
+#endif
 static inline void free_mem_small(void *mem)
 {
 	if(unlikely(mem==NULL))

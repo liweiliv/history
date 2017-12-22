@@ -6,8 +6,7 @@
  */
 #include <assert.h>
 #include <unistd.h>
-
-//#include "GL/glew.h"
+#include "GL/glew.h"
 #ifdef USE_GLFW
 #include "GLFW/glfw3.h"
 #endif
@@ -47,15 +46,43 @@ void window_refresh_callback(GLFWwindow * w)
 {
 
 }
+void setWindowsSize_callback(GLFWwindow*,int w,int h)
+{
+    GLfloat aspectRatio;
+    // 防止被0所除
+
+    if (0 == h){
+        h = 1;
+    }
+    // 设置视口为窗口的大小
+    glViewport(0, 0, w, h);
+    // 选择投影矩阵，并重置坐标系统
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    // 计算窗口的纵横比（像素比）
+    aspectRatio = (GLfloat) w / (GLfloat) h;
+    // 定义裁剪区域（根据窗口的纵横比，并使用正投影）
+    if (w <=h) {// 宽 < 高
+        glOrtho(-1.0, 1.0, -1 /aspectRatio, 1 / aspectRatio, 1.0, -1.0);
+    } else {// 宽 > 高
+        glOrtho(-1.0 * aspectRatio, 1.0 *aspectRatio, -1.0, 1.0, 1.0, -1.0);
+    }
+    // 选择模型视图矩阵，并重置坐标系统
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    Log_r::Notice("window size change to %d*%d",w,h);
+}
 void init_glfw_callback()
 {
     glfwSetErrorCallback(error_callback);
     glfwSetWindowRefreshCallback(main_window,window_refresh_callback);
     glfwSetKeyCallback(main_window,Key_callback);
+    glfwSetWindowSizeCallback(main_window,setWindowsSize_callback);
 }
+
 int init()
 {
-    if(0!=Log_r::Init("/home/liwei/history/history/log.ini","World","g"))
+    if(0!=Log_r::Init("/Users/liwei/history/log.ini","World","g"))
     {
         fprintf(stderr, "init log failed\n");
         return -1;
@@ -124,6 +151,7 @@ int init_main_window()
     }
     /* Make the window's context current */
     glfwMakeContextCurrent(main_window);
+    init_glfw_callback();
     return 0;
 }
 int main_loop()
@@ -133,7 +161,7 @@ int main_loop()
     while (!glfwWindowShouldClose(main_window))
     {
         usleep(10000);
-        m.draw(0);
+        m.draw(2);
         //w.draw();
         /* Swap front and back buffers */
         glfwSwapBuffers(main_window);

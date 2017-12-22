@@ -120,7 +120,7 @@ int I2A_64(uint64_t i, char *a)
             }
             uint32_t _A = i - A * 100000000;
             char *p = a + len;
-            register uint16_t C;
+            uint16_t C;
             uint16_t H = _A / 10000, L = _A - 10000 * H;
             C = H / 100;
             *(uint16_t *) p = MAT[C];
@@ -214,9 +214,9 @@ int I2A_64(uint64_t i, char *a)
          memcpy(a+l,0,12);
          return l+12;
          }*/
-        register uint16_t v = L / 100000000;
+        uint16_t v = L / 100000000;
         char *p = a + l;
-        register uint16_t v1 = v / 100;
+        uint16_t v1 = v / 100;
         ((uint16_t*) (p))[0] = MAT[v1];
         ((uint16_t*) p)[1] = MAT[v - 100 * v1];
         uint32_t L1 = L - ((uint64_t) 100000000) * v;
@@ -321,7 +321,7 @@ int I2A_32(uint32_t i, char * a)
         }
         uint32_t _A = i - A * 100000000;
         char *p = a + len;
-        register uint16_t C;
+        uint16_t C;
         uint16_t H = _A / 10000, L = _A - 10000 * H;
         C = H / 100;
         *(uint16_t *) p = MAT[C];

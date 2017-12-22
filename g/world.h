@@ -8,7 +8,7 @@
 #ifndef G_WORLD_H_
 #define G_WORLD_H_
 
-struct g_map;
+class g_map;
 struct _skip_list;
 class world
 {

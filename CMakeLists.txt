@@ -1,8 +1,8 @@
 project(World)
 cmake_minimum_required(VERSION 2.8)
 
-SET(CMAKE_C_FLAGS "$ENV{CXXFLAGS} -g --std=gnu99")
-SET(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -g --std=c++11")
+SET(CMAKE_C_FLAGS "$ENV{CXXFLAGS} -g -Wall -fpic --std=gnu99")
+SET(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -g -Wall -fpic --std=c++11")
 
 SET(EXECUTABLE_OUTPUT_PATH bin)
 SET(LIBRARY_OUTPUT_PATH lib)

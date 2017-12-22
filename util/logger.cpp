@@ -246,6 +246,7 @@ static int createLogFile(char *file, LogHandle *log)
 	logData->m_fLog = fopen(file, "a");
 	if (logData->m_fLog == NULL)
 	{
+		fprintf(stderr,"open log file %s failed\n",file);
 		return 1; // �����ļ�ʧ�� 
 	}
 	
@@ -358,8 +359,8 @@ Logger* Logger::createLoggerFromProfile(const char *profile, const char *section
 	int baseLevel;
 	int showLevel;
 	int showLine;
-	int switchBy;
-	int switchSize;
+	int switchBy = 0;
+	int switchSize = 0;
 	int rollingNum;
 	
 	int option;
@@ -374,10 +375,16 @@ Logger* Logger::createLoggerFromProfile(const char *profile, const char *section
 #define LOG_SECTION section
 	rootPath = parser.get_string(LOG_SECTION, "root_path");
 	if (rootPath == NULL)
+	{
+		fprintf(stderr,"can not find %s.%s in log config\n",section,"root_path");
 		return NULL;
+	}
 	prefix = parser.get_string(LOG_SECTION, "prefix");
 	if (prefix == NULL)
+	{
+		fprintf(stderr,"can not find %s.%s in log config\n",section,"prefix");
 		return NULL;
+	}
 	tmpStr = parser.get_string(LOG_SECTION, "base_level");
 	if (tmpStr == NULL) {
 		baseLevel = L_INFO;
@@ -406,9 +413,10 @@ Logger* Logger::createLoggerFromProfile(const char *profile, const char *section
 		showLine = !strcasecmp("YES", tmpStr);
 	}
 	
-	switchBy = 0;
+
 	tmpStr = parser.get_string(LOG_SECTION, "switch_by");
 	if (tmpStr != NULL) {
+		switchBy = 0;
 		if (!strcasecmp("SIZE", tmpStr)) {
 			switchBy = LLO_SWITCH_BY_SIZE;
 			switchSize = parser.get_int(LOG_SECTION, "switch_size");

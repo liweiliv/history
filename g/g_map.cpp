@@ -306,12 +306,29 @@ BACK_TO_PARENT:
         }
     }
 }
+struct _quadtree_node *g_map::get_sub_trangler_by_pos(struct _quadtree * tree,_quadtree_node * node,g_pos_3d<GLfloat>  *p)
+{
+	map_obj* m = static_cast<map_obj*>(node->v);
+	float t = (m->m_normal.x * m->m_sharp->m_vectors[0].x
+			+ m->m_normal.y * m->m_sharp->m_vectors[0].y
+			+ m->m_normal.y * m->m_sharp->m_vectors[0].z)
+			- (m->m_normal.x * p->x + m->m_normal.y * p->y
+					+ m->m_normal.z * p->z);
+	t /= (m->m_normal.x * m->m_normal.x + m->m_normal.y * m->m_normal.y
+			+ m->m_normal.z * m->m_normal.z);
+
+	if (1)
+		return NULL;
+}
 struct _quadtree_node * g_map::coordinate2quadtree_node(float longitude ,float latitude,int level)
 {
     g_pos_3d<GLfloat>  p;
     p.x=sin((double)longitude)*m_diameter;
     p.y=cos((double)longitude)*m_diameter;
     p.z=sin((double)latitude)*m_diameter;
+
+    float ff;
+    CALCULATE_DOUBLE_TRANGLER_AREA(ff,p,p,p);
 
     for (int i = 0; i < 20; i++)
     {
@@ -330,8 +347,20 @@ struct _quadtree_node * g_map::coordinate2quadtree_node(float longitude ,float l
         g_pos_3d<GLfloat> _p = {p.x+m_maps[i].m_map->m_normal.x*t
                 ,p.y+m_maps[i].m_map->m_normal.y*t,
                 p.z+m_maps[i].m_map->m_normal.z*t};
-
-
+        float a_all,a1,a2,a3;
+        CALCULATE_DOUBLE_TRANGLER_AREA(a_all,m_maps[i].m_map->m_sharp->m_vectors[0],m_maps[i].m_map->m_sharp->m_vectors[1],m_maps[i].m_map->m_sharp->m_vectors[2]);
+        CALCULATE_DOUBLE_TRANGLER_AREA(a1,m_maps[i].m_map->m_sharp->m_vectors[0],_p,m_maps[i].m_map->m_sharp->m_vectors[2]);
+        CALCULATE_DOUBLE_TRANGLER_AREA(a2,_p,m_maps[i].m_map->m_sharp->m_vectors[2],m_maps[i].m_map->m_sharp->m_vectors[1]);
+        CALCULATE_DOUBLE_TRANGLER_AREA(a3,m_maps[i].m_map->m_sharp->m_vectors[0],_p,m_maps[i].m_map->m_sharp->m_vectors[1]);
+        if(a_all!=a1+a2+a3)
+        		continue;
+        else
+        {
+        		struct _quadtree_node * node = &m_maps[i].m_map_tree->root;
+        		while(QT_LEVEL(node->id)<=level)
+        			node = get_sub_trangler_by_pos(m_maps[i].m_map_tree,node,&p);
+        		return node;
+        }
     }
     return NULL;
 }

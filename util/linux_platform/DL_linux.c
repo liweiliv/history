@@ -84,7 +84,7 @@ static int checkFileExist(const char *filename)
 }
 int compile(const char * code ,int size)
 {
-    char filenameBuf[64]={0},sonameBuf[64]={0},compileCmdBuf[128]={0};
+    char filenameBuf[64]={0},sonameBuf[64]={0};
     sprintf(filenameBuf,"./DLlib/LIB_%d.c",soID);
     sprintf(sonameBuf,"./DLlib/LIB_%d.so",soID);
     remove(filenameBuf);
