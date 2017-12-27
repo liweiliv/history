@@ -82,7 +82,7 @@ void init_glfw_callback()
 
 int init()
 {
-    if(0!=Log_r::Init("/Users/liwei/history/log.ini","World","g"))
+    if(0!=Log_r::Init("/home/liwei/history/log.ini","World","g"))
     {
         fprintf(stderr, "init log failed\n");
         return -1;

@@ -86,7 +86,7 @@ public:
         if(m_mem)
             free(m_mem);
     }
-    void set_sharp(POS_TYPE * vectors,POS_TYPE *normals,g_color<GLfloat> colors,uint32_t point_size)
+    void set_sharp(POS_TYPE * vectors,POS_TYPE *normals,g_color<GLfloat> *colors,uint32_t point_size)
     {
         if(m_mem)
             free(m_mem);

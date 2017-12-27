@@ -19,7 +19,7 @@
 #include "g_map.h"
 #include "g_obj.h"
 #include "objs.h"
-#include "log_r.h"
+#include "Log_r.h"
 
 constexpr static const uint8_t icosohedron_faces[20][3] = {
             {1,4,0},
