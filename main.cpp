@@ -160,8 +160,8 @@ int main_loop()
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(main_window))
     {
-        usleep(10000);
-        m.draw(2);
+        usleep(200000);
+        m.draw(4);
         //w.draw();
         /* Swap front and back buffers */
         glfwSwapBuffers(main_window);

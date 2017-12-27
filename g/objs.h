@@ -32,9 +32,9 @@ public:
         calculate_normal(m_sharp->m_normals[0],m_sharp->m_vectors[0],m_sharp->m_vectors[1],m_sharp->m_vectors[2]);
         calculate_normal(m_sharp->m_normals[1],m_sharp->m_vectors[1],m_sharp->m_vectors[2],m_sharp->m_vectors[0]);
         calculate_normal(m_sharp->m_normals[2],m_sharp->m_vectors[2],m_sharp->m_vectors[0],m_sharp->m_vectors[1]);
-        m_sharp->m_colors[0].r= 0.2f+rand()%30*0.01f;
-        m_sharp->m_colors[0].g= 0.2f+rand()%30*0.01f;
-        m_sharp->m_colors[0].b= 0.2f+rand()%30*0.01f;
+        m_sharp->m_colors[0].r= 0.5f+rand()%30*0.01f;
+        m_sharp->m_colors[0].g= 0.6f+rand()%30*0.01f;
+        m_sharp->m_colors[0].b= 0.5f+rand()%30*0.01f;
      }
     void draw()
     {

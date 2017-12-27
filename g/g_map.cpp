@@ -19,7 +19,7 @@
 #include "g_map.h"
 #include "g_obj.h"
 #include "objs.h"
-
+#include "log_r.h"
 
 constexpr static const uint8_t icosohedron_faces[20][3] = {
             {1,4,0},
@@ -43,41 +43,7 @@ constexpr static const uint8_t icosohedron_faces[20][3] = {
             {5,2,9},
             {11,2,7}
     };
-struct zone
-{
-    uint64_t longitude;
-    uint64_t latitude;
-    uint64_t diameter;
-};
-enum event_type
-{
-
-};
-struct event
-{
-    uint16_t type;
-    uint16_t length;
-    uint64_t event_id;
-    union
-    {
-        uint64_t group_id;
-        uint64_t object_id;
-    };
-    char event_data[1];
-};
-struct time_line_block
-{
-    uint64_t start_time;
-    uint64_t last_update_time;
-    uint64_t next_data_offset;
-    char time_line_data[1];
-};
-struct time_line
-{
-    struct zone zone;
-    uint32_t default_buf_size;
-    time_line_block frtst_block;
-};
+constexpr static const g_pos_3d<GLfloat> source_point = {0.0f,0.0f,0.0f};
 void g_map::destroy_map(void* v)
 {
     delete static_cast<map_obj*>(v);
@@ -271,6 +237,25 @@ g_map::~g_map()
 }
 void g_map::draw(int level)
 {
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+
+	struct _quadtree_node *node_stack[16],* n = coordinate2quadtree_node(0,0,level,node_stack);
+	if(n!=NULL)
+	{
+		for(int i=0;i<level;i++)
+		{
+			if(node_stack[i]!=NULL)
+			{
+                map_obj * m = static_cast<map_obj*>(node_stack[i]->v);
+                m->draw();
+			}
+			else
+				break;
+		}
+	}
+#if 0
     for (int i = 0; i < 20; i++)
     {
         quadtree_node *n = &m_maps[i].m_map_tree->root;
@@ -305,63 +290,110 @@ BACK_TO_PARENT:
                 goto BACK_TO_PARENT;
         }
     }
+#endif;
 }
 struct _quadtree_node *g_map::get_sub_trangler_by_pos(struct _quadtree * tree,_quadtree_node * node,g_pos_3d<GLfloat>  *p)
 {
 	map_obj* m = static_cast<map_obj*>(node->v);
-	float t = (m->m_normal.x * m->m_sharp->m_vectors[0].x
-			+ m->m_normal.y * m->m_sharp->m_vectors[0].y
-			+ m->m_normal.y * m->m_sharp->m_vectors[0].z)
-			- (m->m_normal.x * p->x + m->m_normal.y * p->y
-					+ m->m_normal.z * p->z);
-	t /= (m->m_normal.x * m->m_normal.x + m->m_normal.y * m->m_normal.y
-			+ m->m_normal.z * m->m_normal.z);
+	for(int i =0;i<4;i++)
+	{
+		if(node->child[i]==NULL)
+		{
+			create_sub_triangler(tree, node);
+			assert(node->child[i]!=NULL);
+		}
+		if (IsIntersectTriangle(source_point,*p,m->m_sharp->m_vectors[0],m->m_sharp->m_vectors[1],m->m_sharp->m_vectors[2]))
+			return node->child[i];
+	}
+	return NULL;
 
-	if (1)
+#if 0
+	float t,u,v;
+	if(!IntersectTriangle(*p,source_point,m->m_sharp->m_vectors[0],m->m_sharp->m_vectors[1],m->m_sharp->m_vectors[2],&t,&u,&v))
 		return NULL;
+    g_pos_3d<GLfloat> _p = {p->x*t,p->y*t,p->z*t};
+    float tmp = (m->m_sharp->m_vectors[0].x+m->m_sharp->m_vectors[0].x)/2.0f,tmp_p = _p.x - tmp;
+    tmp -=  m->m_sharp->m_vectors[0].x;
+    if((tmp>=0.0f&&tmp_p>=0)||(tmp<0.0f&&tmp_p<0))
+    {
+    		//not in NO.1 sub trangler
+    		tmp  = (m->m_sharp->m_vectors[0].x+m->m_sharp->m_vectors[2].x)/2.0f;
+    		tmp_p = _p.x - tmp;
+    		tmp -=  m->m_sharp->m_vectors[0].x;
+    		if((tmp>=0.0f&&tmp_p>=0)||(tmp<0.0f&&tmp_p<0))
+    		{
+    			//not in NO.1、2 sub trangler
+        		tmp  = (m->m_sharp->m_vectors[0].x+(m->m_sharp->m_vectors[1].x+m->m_sharp->m_vectors[1].x)/2.0f)/2.0f;
+        		tmp_p = _p.x - tmp;
+        		tmp -=  (m->m_sharp->m_vectors[1].x+m->m_sharp->m_vectors[1].x)/2.0f;
+        		if((tmp>=0.0f&&tmp_p>=0)||(tmp<0.0f&&tmp_p<0))
+        		{
+        			//not in NO.1、2、4 sub trangler
+        			if(node->child[0]==NULL)
+        			{
+        				create_sub_triangler(tree,node);
+        				assert(node->child[0]!=NULL);
+        			}
+        			return node->child[0];
+        		}
+        		else
+        		{
+        			//not in NO.0、1、2 sub trangler
+        			if(node->child[3]==NULL)
+        			{
+        				create_sub_triangler(tree,node);
+        				assert(node->child[3]!=NULL);
+        			}
+        			return node->child[3];
+        		}
+    		}
+    		else
+    		{
+    			//not in NO.0、1 sub trangler
+    		}
+    }
+    else
+    {
+    		//not in NO.0 sub trangler
+    }
+#endif
 }
-struct _quadtree_node * g_map::coordinate2quadtree_node(float longitude ,float latitude,int level)
+/*longitude */
+struct _quadtree_node * g_map::coordinate2quadtree_node(float longitude ,float latitude,int level,struct _quadtree_node **node_stack)
 {
-    g_pos_3d<GLfloat>  p;
-    p.x=sin((double)longitude)*m_diameter;
-    p.y=cos((double)longitude)*m_diameter;
-    p.z=sin((double)latitude)*m_diameter;
-
-    float ff;
-    CALCULATE_DOUBLE_TRANGLER_AREA(ff,p,p,p);
-
+	if(longitude>180.0f||longitude<-180.0f||latitude>90.0f||latitude<-90.0f)
+	{
+		Log_r::Error("invalid argv %f %f in coordinate2quadtree_node",longitude,latitude);
+		return NULL;
+	}
+	double rad_longitude = angle2rad(longitude),rad_latitude = angle2rad(latitude);
+    g_pos_3d<GLfloat>  p = {(float)sin(rad_longitude),(float)cos(rad_longitude),(float)sin(rad_latitude)};
+    Log_r::Notice("coordinate2quadtree_node point dir is %f ,%f ,%f",p.x,p.y,p.z);
     for (int i = 0; i < 20; i++)
     {
-        float t = (m_maps[i].m_map->m_normal.x
-                * m_maps[i].m_map->m_sharp->m_vectors[0].x
-                + m_maps[i].m_map->m_normal.y
-                        * m_maps[i].m_map->m_sharp->m_vectors[0].y
-                + m_maps[i].m_map->m_normal.y
-                        * m_maps[i].m_map->m_sharp->m_vectors[0].z)
-                - (m_maps[i].m_map->m_normal.x * p.x
-                        + m_maps[i].m_map->m_normal.y * p.y
-                        + m_maps[i].m_map->m_normal.z * p.z);
-        t/=(m_maps[i].m_map->m_normal.x*m_maps[i].m_map->m_normal.x+
-                m_maps[i].m_map->m_normal.y*m_maps[i].m_map->m_normal.y
-                +m_maps[i].m_map->m_normal.z*m_maps[i].m_map->m_normal.z);
-        g_pos_3d<GLfloat> _p = {p.x+m_maps[i].m_map->m_normal.x*t
-                ,p.y+m_maps[i].m_map->m_normal.y*t,
-                p.z+m_maps[i].m_map->m_normal.z*t};
-        float a_all,a1,a2,a3;
-        CALCULATE_DOUBLE_TRANGLER_AREA(a_all,m_maps[i].m_map->m_sharp->m_vectors[0],m_maps[i].m_map->m_sharp->m_vectors[1],m_maps[i].m_map->m_sharp->m_vectors[2]);
-        CALCULATE_DOUBLE_TRANGLER_AREA(a1,m_maps[i].m_map->m_sharp->m_vectors[0],_p,m_maps[i].m_map->m_sharp->m_vectors[2]);
-        CALCULATE_DOUBLE_TRANGLER_AREA(a2,_p,m_maps[i].m_map->m_sharp->m_vectors[2],m_maps[i].m_map->m_sharp->m_vectors[1]);
-        CALCULATE_DOUBLE_TRANGLER_AREA(a3,m_maps[i].m_map->m_sharp->m_vectors[0],_p,m_maps[i].m_map->m_sharp->m_vectors[1]);
-        if(a_all!=a1+a2+a3)
-        		continue;
-        else
+    	    if(IsIntersectTriangle(source_point,p,m_maps[i].m_map->m_sharp->m_vectors[0],m_maps[i].m_map->m_sharp->m_vectors[1],m_maps[i].m_map->m_sharp->m_vectors[2]))
         {
         		struct _quadtree_node * node = &m_maps[i].m_map_tree->root;
+        		if(node_stack)
+        			node_stack[0] = node;
         		while(QT_LEVEL(node->id)<=level)
-        			node = get_sub_trangler_by_pos(m_maps[i].m_map_tree,node,&p);
+        		{
+        			(static_cast<map_obj*>(node->v))->draw();
+        			struct _quadtree_node * tmp_node = get_sub_trangler_by_pos(m_maps[i].m_map_tree,node,&p);
+        			if(tmp_node==NULL)
+        			{
+        				Log_r::Error("get_sub_trangler_by_pos return null,level %lu",QT_LEVEL(node->id));
+        				return NULL;
+        			}
+        			node = tmp_node;
+        			//assert(node!=NULL);
+        			if(node_stack)
+        				node_stack[QT_LEVEL(node->id)]=node;
+        		}
         		return node;
         }
     }
+	Log_r::Error("%f %f is not in map",longitude,latitude);
     return NULL;
 }
 

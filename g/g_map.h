@@ -37,7 +37,8 @@ struct _quadtree_node ;
 
 template<typename GT_TYPE>
 struct g_pos_3d;
-
+#define _pai 3.14159265358979323846L
+#define angle2rad(x) (_pai*(x)/180.0f)
 class g_map
 {
 protected:
@@ -64,7 +65,7 @@ public:
     g_map(int diameter,float obliguity,int rotation_period,float orbital_inclination,int orbital_period,const char* map_index_file);
     ~g_map();
     void draw(int level = 3);
-    struct _quadtree_node * coordinate2quadtree_node(float longitude ,float latitude,int level);
+    struct _quadtree_node * coordinate2quadtree_node(float longitude ,float latitude,int level,struct _quadtree_node **node_stack);
     struct _quadtree_node * get_sub_trangler_by_pos(struct _quadtree * tree,_quadtree_node * node,g_pos_3d<float>  *p);
 };
 
