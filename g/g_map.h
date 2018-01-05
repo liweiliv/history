@@ -41,6 +41,7 @@ struct g_pos_3d;
 #define angle2rad(x) (_pai*(x)/180.0f)
 class g_map
 {
+
 protected:
     struct top_map
     {
@@ -57,14 +58,22 @@ protected:
 public:
     constexpr static const double icosohedron_x = 0.525731112119133606L;
     constexpr static const double icosohedron_z = 0.850650808352039932L;
-
+public:
+	class map_view
+	{
+	public:
+		g_map * m_parent_map;
+		struct g_pos_3d<float> * m_view_pos;
+		struct top_map m_maps[20];
+		struct _quadtree_node * m_atomic_node;
+	};
 private:
     static void destroy_map(void* v);
     void create_sub_triangler(struct _quadtree * tree,struct _quadtree_node * node);
 public:
     g_map(int diameter,float obliguity,int rotation_period,float orbital_inclination,int orbital_period,const char* map_index_file);
     ~g_map();
-    void draw(int level = 3);
+    void draw(unsigned int level = 3);
     struct _quadtree_node * coordinate2quadtree_node(float longitude ,float latitude,int level,struct _quadtree_node **node_stack);
     struct _quadtree_node * get_sub_trangler_by_pos(struct _quadtree * tree,_quadtree_node * node,g_pos_3d<float>  *p);
 };

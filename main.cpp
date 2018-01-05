@@ -163,7 +163,7 @@ int main_loop()
         usleep(200000);
         glClearColor(1.0, 1.0, 1.0, 0.0);
         glClear(GL_COLOR_BUFFER_BIT);
-        m.draw(7);
+        m.draw(8);
         //w.draw();
         /* Swap front and back buffers */
         glfwSwapBuffers(main_window);

@@ -10,7 +10,6 @@
 #include "g_obj.h"
 #include <math.h>
 #include <atomic>
-#include <mutex>
 class map_obj :public g_obj<GLfloat>
 {
 public:

@@ -228,9 +228,9 @@ g_map::~g_map()
 	}
 
 }
-void g_map::draw(int level)
+void g_map::draw(unsigned int level)
 {
-
+#if 0
 	struct _quadtree_node *node_stack[16], *n = coordinate2quadtree_node(10, 2,
 			level, node_stack);
 	if (n != NULL)
@@ -246,7 +246,7 @@ void g_map::draw(int level)
 				break;
 		}
 	}
-#if 0
+#else
 	for (int i = 0; i < 20; i++)
 	{
 		quadtree_node *n = &m_maps[i].m_map_tree->root;
