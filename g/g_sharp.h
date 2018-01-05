@@ -160,11 +160,11 @@ private:
         glVertexPointer(3, GL_FLOAT, 0, m_vectors);
         if(m_indices)
         {
-            glDrawElements(GL_TRIANGLES, m_index_size, GL_UNSIGNED_BYTE, m_indices);
+            glDrawElements(GL_LINE_STRIP, m_index_size, GL_UNSIGNED_BYTE, m_indices);
         }
         else
         {
-            glDrawArrays(GL_TRIANGLES, 0, m_point_size);
+            glDrawArrays(GL_LINE_STRIP, 0, m_point_size);
         }
         glDisableClientState(GL_VERTEX_ARRAY);  // disable vertex arrays
         glDisableClientState(GL_COLOR_ARRAY);

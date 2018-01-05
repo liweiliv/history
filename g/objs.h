@@ -9,14 +9,15 @@
 #define G_OBJS_H_
 #include "g_obj.h"
 #include <math.h>
-
-
+#include <atomic>
+#include <mutex>
 class map_obj :public g_obj<GLfloat>
 {
 public:
     g_pos_3d<GLfloat> m_center;
     g_pos_3d<GLfloat> m_normal;
     uint64_t m_map_id;
+    std::atomic<int> m_ref;
     map_obj(uint64_t map_id,int id,const g_pos_3d<GLfloat> & triangler_point_1,const g_pos_3d<GLfloat> & triangler_point_2,const g_pos_3d<GLfloat> & triangler_point_3):
         g_obj<GLfloat>(GT_MAP,id),m_map_id(map_id)
      {
@@ -35,6 +36,7 @@ public:
         m_sharp->m_colors[0].r= 0.5f+rand()%30*0.01f;
         m_sharp->m_colors[0].g= 0.6f+rand()%30*0.01f;
         m_sharp->m_colors[0].b= 0.5f+rand()%30*0.01f;
+        m_ref.store(0);
      }
     void draw()
     {

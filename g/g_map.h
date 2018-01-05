@@ -55,8 +55,8 @@ protected:
     char m_map_index_file[256];
     struct top_map m_maps[20];
 public:
-    constexpr static const double icosohedron_x = 0.525731112119133606f;
-    constexpr static const double icosohedron_z = 0.850650808352039932f;
+    constexpr static const double icosohedron_x = 0.525731112119133606L;
+    constexpr static const double icosohedron_z = 0.850650808352039932L;
 
 private:
     static void destroy_map(void* v);
