@@ -20,7 +20,7 @@
 #include "g_obj.h"
 #include "objs.h"
 #include "Log_r.h"
-
+#include "bitmap.h"
 constexpr static const uint8_t icosohedron_faces[20][3] =
 {
 { 1, 4, 0 },
@@ -116,6 +116,8 @@ g_map::g_map(int diameter, float obliguity, int rotation_period,
 {
 	strncpy(m_map_index_file, map_index_file, 255);
 
+	m_id_bitmap = (unsigned char*)malloc((m_max_id=32)/8);
+	m_prev_alloced_id = 0;
 	GLdouble r_X = icosohedron_x * m_diameter;
 	GLdouble r_Z = icosohedron_z * m_diameter;
 	g_pos_3d<GLfloat> vectors[12];
@@ -228,7 +230,7 @@ g_map::~g_map()
 	}
 
 }
-void g_map::draw(unsigned int level)
+void g_map::draw(const unsigned int level)
 {
 #if 0
 	struct _quadtree_node *node_stack[16], *n = coordinate2quadtree_node(10, 2,
@@ -272,20 +274,20 @@ void g_map::draw(unsigned int level)
 				n = n->child[0];
 				continue;
 			}
-			BACK_TO_PARENT:
+BACK_TO_PARENT:
 			idx = QT_GET_IDX(n->id);
 			n = n->parent;
 			if (n == NULL) //root
-			break;
+				break;
 			if (idx++ == 3)
-			goto BACK_TO_PARENT;
+				goto BACK_TO_PARENT;
 		}
 	}
 #endif
 }
 struct _quadtree_node *
 g_map::get_sub_trangler_by_pos(struct _quadtree * tree, _quadtree_node * node,
-		g_pos_3d<GLfloat> *p)
+		const g_pos_3d<GLfloat> *p)
 {
 	for (int i = 0; i < 4; i++)
 	{
@@ -352,6 +354,37 @@ g_map::get_sub_trangler_by_pos(struct _quadtree * tree, _quadtree_node * node,
 	}
 #endif
 }
+struct _quadtree_node * g_map::coordinate2quadtree_node_by_pos(const g_pos_3d<float> *p,int level, struct _quadtree_node **node_stack)
+{
+	for (int i = 0; i < 20; i++)
+	{
+		if (IsIntersectTriangle(source_point, *p,
+				m_maps[i].m_map->m_sharp->m_vectors[0],
+				m_maps[i].m_map->m_sharp->m_vectors[1],
+				m_maps[i].m_map->m_sharp->m_vectors[2]))
+		{
+			struct _quadtree_node * node = &m_maps[i].m_map_tree->root;
+			if (node_stack)
+				node_stack[0] = node;
+			while (QT_LEVEL(node->id) <= (uint) level)
+			{
+				//(static_cast<map_obj*>(node->v))->draw();
+				struct _quadtree_node * tmp_node = get_sub_trangler_by_pos(
+						m_maps[i].m_map_tree, node, p);
+				if (tmp_node == NULL)
+				{
+					return NULL;
+				}
+				node = tmp_node;
+				//assert(node!=NULL);
+				if (node_stack)
+					node_stack[QT_LEVEL(node->id)] = node;
+			}
+			return node;
+		}
+	}
+	return NULL;
+}
 /*longitude */
 struct _quadtree_node *
 g_map::coordinate2quadtree_node(float longitude, float latitude, int level,
@@ -369,44 +402,38 @@ g_map::coordinate2quadtree_node(float longitude, float latitude, int level,
 	g_pos_3d<GLfloat> p =
 	{ (float) sin(rad_longitude), (float) sin(rad_latitude), (float) cos(
 			rad_longitude) };
-	Log_r::Notice("draw point %f,%f,%f", p.x, p.y, p.z);
-	glBegin(GL_POINTS);
-	glEnable(GL_POINT_SMOOTH);
-	glPointSize(10);
-	glColor3f(0.09f, 0.0f, 0.9f);
-	glVertex3fv((GLfloat*) &p);
-	glEnd();
-	Log_r::Notice("coordinate2quadtree_node point dir is %f ,%f ,%f", p.x, p.y,
-			p.z);
-	for (int i = 0; i < 20; i++)
-	{
-		if (IsIntersectTriangle(source_point, p,
-				m_maps[i].m_map->m_sharp->m_vectors[0],
-				m_maps[i].m_map->m_sharp->m_vectors[1],
-				m_maps[i].m_map->m_sharp->m_vectors[2]))
-		{
-			struct _quadtree_node * node = &m_maps[i].m_map_tree->root;
-			if (node_stack)
-				node_stack[0] = node;
-			while (QT_LEVEL(node->id) <= (uint) level)
-			{
-				//(static_cast<map_obj*>(node->v))->draw();
-				struct _quadtree_node * tmp_node = get_sub_trangler_by_pos(
-						m_maps[i].m_map_tree, node, &p);
-				if (tmp_node == NULL)
-				{
-					Log_r::Error("get_sub_trangler_by_pos return null,level %lu",QT_LEVEL(node->id));
-					return NULL;
-				}
-				node = tmp_node;
-				//assert(node!=NULL);
-				if (node_stack)
-					node_stack[QT_LEVEL(node->id)] = node;
-			}
-			return node;
-		}
-	}
-	Log_r::Error("%f %f is not in map", longitude, latitude);
-	return NULL;
+	return coordinate2quadtree_node_by_pos(&p,level,node_stack);
 }
+int g_map::gen_view_id()
+{
+	m_prev_alloced_id=(m_prev_alloced_id+1)%m_max_id;
+	int roolback_id = m_prev_alloced_id;
+	do
+	{
+		if(test_bitmap(m_id_bitmap,m_prev_alloced_id))
+			m_prev_alloced_id=(m_prev_alloced_id+1)%m_max_id;
+		else
+		{
+			set_bitmap(m_id_bitmap,m_prev_alloced_id);
+			return m_prev_alloced_id;
+		}
+	}while(m_prev_alloced_id!=roolback_id);
+	m_prev_alloced_id = m_max_id;
+	if(ALIGN(m_max_id*5/4,8)<m_max_id)
+		m_max_id += 32;
+	else
+		m_max_id = ALIGN(m_max_id*5/4,8);
+	m_id_bitmap = (unsigned char*)realloc(m_id_bitmap,m_max_id/8);
+	set_bitmap(m_id_bitmap,m_prev_alloced_id);
+	return m_prev_alloced_id;
+}
+g_map::map_view * g_map::create_view(int detail_level,const g_pos_3d<float> *p)
+{
+	int id  = gen_view_id();
+	struct _quadtree_node *node = coordinate2quadtree_node_by_pos(p,detail_level,NULL);
+	if(node == NULL)
+		return NULL;
+	for(struct _quadtree_node * tmp_node = node ;tmp_node!=NULL;tmp_node=tmp_node->parent)
+		static_cast<map_obj*>(tmp_node)->rigister_user(id);
 
+}
