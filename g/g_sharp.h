@@ -11,7 +11,8 @@
 #include <assert.h>
 #include <math.h>
 #include "g_point.h"
-template < typename POS_TYPE>
+
+template <typename POS_TYPE>
 class g_sharp
 {
 public:
@@ -106,6 +107,12 @@ public:
         memcpy(m_colors,colors,sizeof(g_color<GLfloat>)*m_point_size);
     }
 private:
+    void set_vbo_data()
+    {
+        glNormalPointer(GL_FLOAT, 0, (void*)(sizeof(POS_TYPE)*m_point_size));
+        glColorPointer(sizeof(g_color<GLfloat>)/sizeof(GLfloat), GL_FLOAT, 0, (void*)((sizeof(POS_TYPE)+sizeof(POS_TYPE))*m_point_size));
+        glVertexPointer(3, GL_FLOAT, 0, 0);
+    }
     inline int draw_by_vbo(POS_TYPE *pos,POS_TYPE *dirct)
     {
         if(m_vbo_buf_id == 0xffffffff)
@@ -122,9 +129,7 @@ private:
         if(m_indices)
             glEnableClientState(GL_INDEX_ARRAY);
         // before draw, specify vertex and index arrays with their offsets
-        glNormalPointer(GL_FLOAT, 0, (void*)(sizeof(POS_TYPE)*m_point_size));
-        glColorPointer(sizeof(g_color<GLfloat>)/sizeof(GLfloat), GL_FLOAT, 0, (void*)((sizeof(POS_TYPE)+sizeof(POS_TYPE))*m_point_size));
-        glVertexPointer(3, GL_FLOAT, 0, 0);
+        set_vbo_data();
         if(m_indices)
         {
             glDrawElements(GL_TRIANGLES, m_index_size, GL_UNSIGNED_BYTE, m_indices);
@@ -145,7 +150,13 @@ private:
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         return 0;
     }
-    inline int draw_normal(POS_TYPE *pos,POS_TYPE *dirct)
+    void set_normally_data()
+    {
+        glNormalPointer(GL_FLOAT, 0, m_normals);
+        glColorPointer(4, GL_FLOAT, 0, m_colors);
+        glVertexPointer(3, GL_FLOAT, 0, m_vectors);
+    }
+    inline int draw_normally(POS_TYPE *pos,POS_TYPE *dirct)
     {
         // enable vertex arrays
         //glEnableClientState(GL_NORMAL_ARRAY);
@@ -155,9 +166,7 @@ private:
         if(m_indices)
             glEnableClientState(GL_INDEX_ARRAY);
         // before draw, specify vertex and index arrays with their offsets
-        glNormalPointer(GL_FLOAT, 0, m_normals);
-        glColorPointer(4, GL_FLOAT, 0, m_colors);
-        glVertexPointer(3, GL_FLOAT, 0, m_vectors);
+        set_normally_data();
         if(m_indices)
         {
             glDrawElements(GL_LINE_STRIP, m_index_size, GL_UNSIGNED_BYTE, m_indices);
@@ -181,12 +190,12 @@ public:
             if(m_use_vbo)
                 draw_by_vbo(pos,dirct);
             else
-                draw_normal(pos,dirct);
+            	draw_normally(pos,dirct);
         }
     }
 };
-
-
-
-
+template<>
+void g_sharp<g_pos_3d<GLdouble>>::set_vbo_data();
+template<>
+void g_sharp<g_pos_3d<GLdouble>>::set_normally_data();
 #endif /* G_SHARP_H_ */

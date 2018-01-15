@@ -196,7 +196,7 @@ static void * insert(skip_list * skip_list, int64_t key, void * value)
     if (x != NULL && x->key == key)
         return x->value;
     int height = random_height(skip_list);
-    if (height > (uint64_t) NoBarrier_Load(skip_list->max_height))
+    if (height > (int64_t) NoBarrier_Load(skip_list->max_height))
     {
         for (int i = (uint64_t) NoBarrier_Load(skip_list->max_height);
                 i < height; i++)

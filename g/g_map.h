@@ -66,7 +66,7 @@ public:
 		const g_map * m_map;
 		int m_detail_level;
 	private:
-		explicit map_view(const g_map * m,int id,int detail_level):m_map(m),m_id(id),m_detail_level(detail_level){}
+		explicit map_view(const g_map * m,int id,int detail_level):m_id(id),m_map(m),m_detail_level(detail_level){}
 	public:
 		~map_view()
 		{
@@ -74,7 +74,7 @@ public:
 		}
 		void draw()
 		{
-			m_map->draw(m_id);
+			//m_map->draw(m_id);
 		}
 	};
 private:
@@ -93,12 +93,12 @@ public:
 	void draw(const unsigned int level = 3);
 	struct _quadtree_node * coordinate2quadtree_node(float longitude,
 			float latitude, int level, struct _quadtree_node **node_stack);
-	struct _quadtree_node * coordinate2quadtree_node_by_pos(const g_pos_3d<float> *p,int level, struct _quadtree_node **node_stack);
+	struct _quadtree_node * coordinate2quadtree_node_by_pos(const g_pos_3d<double> *p,int level, struct _quadtree_node **node_stack);
 	struct _quadtree_node * get_sub_trangler_by_pos(struct _quadtree * tree,
-			_quadtree_node * node, const g_pos_3d<float> *p);
+			_quadtree_node * node, const g_pos_3d<double> *p);
 
 	map_view * create_view(int detail_level,float longitude,float latitude);
-	map_view * create_view(int detail_level,const g_pos_3d<float> *p);
+	map_view * create_view(int detail_level,const g_pos_3d<double> *p);
 };
 
 #endif /* G_G_MAP_H_ */

@@ -43,14 +43,14 @@ constexpr static const uint8_t icosohedron_faces[20][3] =
 { 2, 11, 9 },
 { 5, 2, 9 },
 { 11, 2, 7 } };
-constexpr static const g_pos_3d<GLfloat> source_point =
+constexpr static const g_pos_3d<GLdouble> source_point =
 { 0.0f, 0.0f, 0.0f };
 void g_map::destroy_map(void* v)
 {
 	delete static_cast<map_obj*>(v);
 }
 static inline void calculate_point_in_ball(double diameter,
-		g_pos_3d<GLfloat>* point)
+		g_pos_3d<GLdouble>* point)
 {
 	double mod = sqrt(
 			diameter * diameter
@@ -62,7 +62,7 @@ static inline void calculate_point_in_ball(double diameter,
 }
 void g_map::create_sub_triangler(struct _quadtree * tree, quadtree_node * node)
 {
-	g_pos_3d<GLfloat> v01, v12, v20;
+	g_pos_3d<GLdouble> v01, v12, v20;
 	map_obj * m = static_cast<map_obj*>(node->v);
 
 	v01.x = (m->m_sharp->m_vectors[0].x + m->m_sharp->m_vectors[1].x);
@@ -120,7 +120,7 @@ g_map::g_map(int diameter, float obliguity, int rotation_period,
 	m_prev_alloced_id = 0;
 	GLdouble r_X = icosohedron_x * m_diameter;
 	GLdouble r_Z = icosohedron_z * m_diameter;
-	g_pos_3d<GLfloat> vectors[12];
+	g_pos_3d<GLdouble> vectors[12];
 	INIT_POS_3D(&vectors[0], -r_X, 0.0, r_Z);
 	INIT_POS_3D(&vectors[1], r_X, 0.0, r_Z);
 	INIT_POS_3D(&vectors[2], -r_X, 0.0, -r_Z);
@@ -287,7 +287,7 @@ BACK_TO_PARENT:
 }
 struct _quadtree_node *
 g_map::get_sub_trangler_by_pos(struct _quadtree * tree, _quadtree_node * node,
-		const g_pos_3d<GLfloat> *p)
+		const g_pos_3d<GLdouble> *p)
 {
 	for (int i = 0; i < 4; i++)
 	{
@@ -296,7 +296,7 @@ g_map::get_sub_trangler_by_pos(struct _quadtree * tree, _quadtree_node * node,
 			create_sub_triangler(tree, node);
 			assert(node->child[i]!=NULL);
 		}
-		const g_pos_3d<GLfloat> *  _vlist = (static_cast<map_obj*>(node->child[i]->v))->m_sharp->m_vectors;
+		const g_pos_3d<GLdouble> *  _vlist = (static_cast<map_obj*>(node->child[i]->v))->m_sharp->m_vectors;
 		if (IsIntersectTriangle(source_point, *p, _vlist[0],_vlist[1], _vlist[2]))
 			return node->child[i];
 	}
@@ -354,7 +354,7 @@ g_map::get_sub_trangler_by_pos(struct _quadtree * tree, _quadtree_node * node,
 	}
 #endif
 }
-struct _quadtree_node * g_map::coordinate2quadtree_node_by_pos(const g_pos_3d<float> *p,int level, struct _quadtree_node **node_stack)
+struct _quadtree_node * g_map::coordinate2quadtree_node_by_pos(const g_pos_3d<GLdouble> *p,int level, struct _quadtree_node **node_stack)
 {
 	for (int i = 0; i < 20; i++)
 	{
@@ -399,8 +399,8 @@ g_map::coordinate2quadtree_node(float longitude, float latitude, int level,
 	}
 	double rad_longitude = angle2rad(longitude), rad_latitude = angle2rad(
 			latitude);
-	g_pos_3d<GLfloat> p =
-	{ (float) sin(rad_longitude), (float) sin(rad_latitude), (float) cos(
+	g_pos_3d<GLdouble> p =
+	{ sin(rad_longitude),  sin(rad_latitude),  cos(
 			rad_longitude) };
 	return coordinate2quadtree_node_by_pos(&p,level,node_stack);
 }
@@ -427,13 +427,14 @@ int g_map::gen_view_id()
 	set_bitmap(m_id_bitmap,m_prev_alloced_id);
 	return m_prev_alloced_id;
 }
-g_map::map_view * g_map::create_view(int detail_level,const g_pos_3d<float> *p)
+g_map::map_view * g_map::create_view(int detail_level,const g_pos_3d<GLdouble> *p)
 {
 	int id  = gen_view_id();
 	struct _quadtree_node *node = coordinate2quadtree_node_by_pos(p,detail_level,NULL);
 	if(node == NULL)
 		return NULL;
 	for(struct _quadtree_node * tmp_node = node ;tmp_node!=NULL;tmp_node=tmp_node->parent)
-		static_cast<map_obj*>(tmp_node)->rigister_user(id);
-
+		static_cast<map_obj*>(tmp_node->v)->rigister_user(id);
+	//double max_distance = sqrt((double)(1.0f+static_cast<map_obj*>(node->v)->x))
+	return NULL;
 }

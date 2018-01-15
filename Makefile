@@ -201,6 +201,30 @@ g/g_map.cpp.s:
 	$(MAKE) -f CMakeFiles/Gengin.dir/build.make CMakeFiles/Gengin.dir/g/g_map.cpp.s
 .PHONY : g/g_map.cpp.s
 
+g/g_sharp.o: g/g_sharp.cpp.o
+.PHONY : g/g_sharp.o
+
+# target to build an object file
+g/g_sharp.cpp.o:
+	$(MAKE) -f CMakeFiles/Gengin.dir/build.make CMakeFiles/Gengin.dir/g/g_sharp.cpp.o
+.PHONY : g/g_sharp.cpp.o
+
+g/g_sharp.i: g/g_sharp.cpp.i
+.PHONY : g/g_sharp.i
+
+# target to preprocess a source file
+g/g_sharp.cpp.i:
+	$(MAKE) -f CMakeFiles/Gengin.dir/build.make CMakeFiles/Gengin.dir/g/g_sharp.cpp.i
+.PHONY : g/g_sharp.cpp.i
+
+g/g_sharp.s: g/g_sharp.cpp.s
+.PHONY : g/g_sharp.s
+
+# target to generate assembly for a file
+g/g_sharp.cpp.s:
+	$(MAKE) -f CMakeFiles/Gengin.dir/build.make CMakeFiles/Gengin.dir/g/g_sharp.cpp.s
+.PHONY : g/g_sharp.cpp.s
+
 g/world.o: g/world.cpp.o
 .PHONY : g/world.o
 
@@ -507,6 +531,9 @@ help:
 	@echo "... g/g_map.o"
 	@echo "... g/g_map.i"
 	@echo "... g/g_map.s"
+	@echo "... g/g_sharp.o"
+	@echo "... g/g_sharp.i"
+	@echo "... g/g_sharp.s"
 	@echo "... g/world.o"
 	@echo "... g/world.i"
 	@echo "... g/world.s"
