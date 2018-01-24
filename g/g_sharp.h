@@ -82,7 +82,7 @@ public:
     }
     ~g_sharp()
     {
-        if(m_vbo_buf_id == 0xffffffff)
+        if(m_vbo_buf_id != 0xffffffff)
             glDeleteBuffersARB(1, &m_vbo_buf_id);
         if(m_mem)
             free(m_mem);

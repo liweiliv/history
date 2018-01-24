@@ -232,12 +232,12 @@ g_map::~g_map()
 }
 void g_map::draw(const unsigned int level)
 {
-#if 0
+#if 1
 	struct _quadtree_node *node_stack[16], *n = coordinate2quadtree_node(10, 2,
 			level, node_stack);
 	if (n != NULL)
 	{
-		for (int i = 0; i < level; i++)
+		for (uint i = 0 ;i<level;i++)
 		{
 			if (node_stack[i] != NULL)
 			{
@@ -249,6 +249,7 @@ void g_map::draw(const unsigned int level)
 		}
 	}
 #else
+	int c = 0;
 	for (int i = 0; i < 20; i++)
 	{
 		quadtree_node *n = &m_maps[i].m_map_tree->root;
@@ -282,7 +283,9 @@ BACK_TO_PARENT:
 			if (idx++ == 3)
 				goto BACK_TO_PARENT;
 		}
+		c+=m_maps[i].m_map_tree->node_count;
 	}
+	Log_r::Notice("all node count is %d",c);
 #endif
 }
 struct _quadtree_node *
@@ -299,60 +302,12 @@ g_map::get_sub_trangler_by_pos(struct _quadtree * tree, _quadtree_node * node,
 		const g_pos_3d<GLdouble> *  _vlist = (static_cast<map_obj*>(node->child[i]->v))->m_sharp->m_vectors;
 		if (IsIntersectTriangle(source_point, *p, _vlist[0],_vlist[1], _vlist[2]))
 			return node->child[i];
-	}
-	return NULL;
-
-#if 0
-	float t,u,v;
-	if(!IntersectTriangle(*p,source_point,m->m_sharp->m_vectors[0],m->m_sharp->m_vectors[1],m->m_sharp->m_vectors[2],&t,&u,&v))
-	return NULL;
-	g_pos_3d<GLfloat> _p =
-	{	p->x*t,p->y*t,p->z*t};
-	float tmp = (m->m_sharp->m_vectors[0].x+m->m_sharp->m_vectors[0].x)/2.0f,tmp_p = _p.x - tmp;
-	tmp -= m->m_sharp->m_vectors[0].x;
-	if((tmp>=0.0f&&tmp_p>=0)||(tmp<0.0f&&tmp_p<0))
-	{
-		//not in NO.1 sub trangler
-		tmp = (m->m_sharp->m_vectors[0].x+m->m_sharp->m_vectors[2].x)/2.0f;
-		tmp_p = _p.x - tmp;
-		tmp -= m->m_sharp->m_vectors[0].x;
-		if((tmp>=0.0f&&tmp_p>=0)||(tmp<0.0f&&tmp_p<0))
-		{
-			//not in NO.1、2 sub trangler
-			tmp = (m->m_sharp->m_vectors[0].x+(m->m_sharp->m_vectors[1].x+m->m_sharp->m_vectors[1].x)/2.0f)/2.0f;
-			tmp_p = _p.x - tmp;
-			tmp -= (m->m_sharp->m_vectors[1].x+m->m_sharp->m_vectors[1].x)/2.0f;
-			if((tmp>=0.0f&&tmp_p>=0)||(tmp<0.0f&&tmp_p<0))
-			{
-				//not in NO.1、2、4 sub trangler
-				if(node->child[0]==NULL)
-				{
-					create_sub_triangler(tree,node);
-					assert(node->child[0]!=NULL);
-				}
-				return node->child[0];
-			}
-			else
-			{
-				//not in NO.0、1、2 sub trangler
-				if(node->child[3]==NULL)
-				{
-					create_sub_triangler(tree,node);
-					assert(node->child[3]!=NULL);
-				}
-				return node->child[3];
-			}
-		}
 		else
 		{
-			//not in NO.0、1 sub trangler
+			//Log_r::Error("point %f ,%f,%f is not in ",p->x,p->y,p->z);
 		}
 	}
-	else
-	{
-		//not in NO.0 sub trangler
-	}
-#endif
+	return NULL;
 }
 struct _quadtree_node * g_map::coordinate2quadtree_node_by_pos(const g_pos_3d<GLdouble> *p,int level, struct _quadtree_node **node_stack)
 {

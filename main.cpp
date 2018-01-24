@@ -4,6 +4,7 @@
  *  Created on: 2017年11月17日
  *      Author: liwei
  */
+#include <stdio.h>
 #include <assert.h>
 #include <unistd.h>
 #include "GL/glew.h"
@@ -26,7 +27,7 @@ const char * conf_file = NULL;
 typedef int (*key_action)(int action,int mods);
 
 key_action key_action_lsit[512] = {0};
-
+float  scalef = 1.0f;
 void Key_callback(GLFWwindow* pWindow, int key, int scancode, int action, int mods)
 {
     if(pWindow == main_window)
@@ -38,6 +39,31 @@ void Key_callback(GLFWwindow* pWindow, int key, int scancode, int action, int mo
     else
         return;//todo
 }
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (action == GLFW_PRESS)
+		switch (button)
+		{
+		case GLFW_MOUSE_BUTTON_LEFT:
+			break;
+		case GLFW_MOUSE_BUTTON_MIDDLE:
+			break;
+		case GLFW_MOUSE_BUTTON_RIGHT:
+			break;
+		default:
+			return;
+		}
+	return;
+}
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+  if(yoffset>0.0f)
+	  scalef *=1.01f;
+  else
+	  scalef /=1.01f;
+  if(scalef<=0.0f)
+	  scalef = 1.0f;
+}
 void error_callback(int error, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
@@ -46,7 +72,7 @@ void window_refresh_callback(GLFWwindow * w)
 {
 
 }
-void setWindowsSize_callback(GLFWwindow*,int w,int h)
+void setWindowsSize_callback(GLFWwindow* window,int w,int h)
 {
     GLfloat aspectRatio;
     // 防止被0所除
@@ -63,9 +89,9 @@ void setWindowsSize_callback(GLFWwindow*,int w,int h)
     aspectRatio = (GLfloat) w / (GLfloat) h;
     // 定义裁剪区域（根据窗口的纵横比，并使用正投影）
     if (w <=h) {// 宽 < 高
-        glOrtho(-1.0, 1.0, -1 /aspectRatio, 1 / aspectRatio, 1.0, -1.0);
+        glOrtho(-1.0, 1.0, -1 /aspectRatio, 1 / aspectRatio, 10.0, -10.0);
     } else {// 宽 > 高
-        glOrtho(-1.0 * aspectRatio, 1.0 *aspectRatio, -1.0, 1.0, 1.0, -1.0);
+        glOrtho(-1.0 * aspectRatio, 1.0 *aspectRatio, -1.0, 1.0, 10.0, -10.0);
     }
     // 选择模型视图矩阵，并重置坐标系统
     glMatrixMode(GL_MODELVIEW);
@@ -77,6 +103,8 @@ void init_glfw_callback()
     glfwSetErrorCallback(error_callback);
     glfwSetWindowRefreshCallback(main_window,window_refresh_callback);
     glfwSetKeyCallback(main_window,Key_callback);
+    glfwSetMouseButtonCallback(main_window, mouse_button_callback);
+    glfwSetScrollCallback(main_window, scroll_callback);
     glfwSetWindowSizeCallback(main_window,setWindowsSize_callback);
 }
 
@@ -157,13 +185,23 @@ int init_main_window()
 int main_loop()
 {
     g_map m(1,0,0,0,0,"fs");
+    setWindowsSize_callback(main_window,main_window_size_width,main_window_size_high);
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(main_window))
     {
         usleep(200000);
         glClearColor(1.0, 1.0, 1.0, 0.0);
         glClear(GL_COLOR_BUFFER_BIT);
-        m.draw(7);
+        if(scalef!=1.0f)
+        {
+        	glPushMatrix();
+        	glScalef(scalef, scalef, scalef);
+        }
+        m.draw(5);
+        if(scalef!=1.0f)
+        {
+        	glPopMatrix();
+        }
         //w.draw();
         /* Swap front and back buffers */
         glfwSwapBuffers(main_window);

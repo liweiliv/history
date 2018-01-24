@@ -31,6 +31,7 @@ typedef struct _quadtree
 {
     quadtree_node root;
     mempool mp;
+    uint32_t node_count;
     void (*destroy_value) (void*);
 }quadtree;
 
@@ -96,6 +97,7 @@ uint64_t insert(quadtree * tree,quadtree_node * n,uint8_t idx,void *value,void *
     new_node->id = id;
     new_node->parent = n;
     new_node->v = value;
+    tree->node_count++;
     return id;
 }
 uint64_t insert(quadtree * tree,uint64_t pid,uint8_t idx,void *value,void ** exist_value)
@@ -140,6 +142,7 @@ int erase(quadtree * tree,uint64_t id,int force)
                     {
                         tree->destroy_value(d->child[idx]->v);
                         free_mem_small(d->child[idx]);
+                        tree->node_count--;
                         d->child[idx] = NULL;
                     }
                 }
@@ -151,6 +154,7 @@ int erase(quadtree * tree,uint64_t id,int force)
         n->parent->child[QT_GET_IDX(id)]=NULL;
     tree->destroy_value(n->v);
     free_mem_small(n);
+    tree->node_count--;
     return 0;
 }
 void destroy_quadtree(quadtree * tree)
