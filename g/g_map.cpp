@@ -96,9 +96,9 @@ void g_map::create_sub_triangler(struct _quadtree * tree, quadtree_node * node)
 	}
 	if (!node->child[2])
 	{
-		map_obj * m_12_2_20 = new map_obj(gen_Id(node->id, 2),
-				gen_Id(node->id, 2), v12, m->m_sharp->m_vectors[2], v20);
-		m_12_2_20->m_map_id = insert(tree, node, 2, m_12_2_20, NULL);
+		map_obj * m_20_2_12 = new map_obj(gen_Id(node->id, 2),
+				gen_Id(node->id, 2), v20, m->m_sharp->m_vectors[2], v12);
+		m_20_2_12->m_map_id = insert(tree, node, 2, m_20_2_12, NULL);
 	}
 	if (!node->child[3])
 	{
@@ -311,6 +311,10 @@ g_map::get_sub_trangler_by_pos(struct _quadtree * tree, _quadtree_node * node,
 }
 struct _quadtree_node * g_map::coordinate2quadtree_node_by_pos(const g_pos_3d<GLdouble> *p,int level, struct _quadtree_node **node_stack)
 {
+	glBegin(GL_POINTS);
+	glColor3f(0.1f,0.2f,0.3f);
+	glVertex3dv((double*)p);
+	glEnd();
 	for (int i = 0; i < 20; i++)
 	{
 		if (IsIntersectTriangle(source_point, *p,
@@ -328,6 +332,10 @@ struct _quadtree_node * g_map::coordinate2quadtree_node_by_pos(const g_pos_3d<GL
 						m_maps[i].m_map_tree, node, p);
 				if (tmp_node == NULL)
 				{
+					for(int j=0;j<4;j++)
+					{
+						(static_cast<map_obj*>(node->child[j]->v))->draw();
+					}
 					return NULL;
 				}
 				node = tmp_node;

@@ -11,6 +11,12 @@
 #ifdef USE_GLFW
 #include "GLFW/glfw3.h"
 #endif
+#include <glm/glm.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
+
 #include "world.h"
 #include "g_map.h"
 #include "INIParser.h"
@@ -26,15 +32,73 @@ int main_window_size_width = 0;
 const char * conf_file = NULL;
 typedef int (*key_action)(int action,int mods);
 
-key_action key_action_lsit[512] = {0};
-float  scalef = 1.0f;
+key_action key_action_list[512] = {0};
+
+glm::mat4 transform_camera(1.0f); // 摄像机的位置和定向，即摄像机在世界坐标系中位置
+glm::mat4 transform_model(1.0f);  // 模型变换矩阵，即物体坐标到世界坐标
+glm::vec4 position_light0(0);     // 光源位置，世界坐标系中的坐标
+float speed_scale=0.01f;           // 鼠标交互，移动速度缩放值
+
+
+int key_up(int action,int mods)
+{
+	if(action == GLFW_PRESS || action == GLFW_REPEAT)
+	{
+		glm::mat4 mod ;
+		transform_camera *= glm::translate(mod,glm::vec3(0.0f,0.0f,speed_scale));
+	}
+	return 0;
+}
+int key_down(int action,int mods)
+{
+	if(action == GLFW_PRESS || action == GLFW_REPEAT)
+	{
+		glm::mat4 mod ;
+		transform_camera *= glm::translate(mod,glm::vec3(0.0f,0.0f,-speed_scale));	}
+	return 0;
+}
+int key_right(int action,int mods)
+{
+	if(action == GLFW_PRESS || action == GLFW_REPEAT)
+	{
+		glm::mat4 mod ;
+		transform_camera *= glm::translate(mod,glm::vec3(0.0f,speed_scale,0.0f));
+	}
+	return 0;
+}
+int key_left(int action,int mods)
+{
+	if(action == GLFW_PRESS || action == GLFW_REPEAT)
+	{
+		glm::mat4 mod ;
+		transform_camera *= glm::translate(mod,glm::vec3(0.0f,-speed_scale,0.0f));
+	}
+	return 0;
+}
+int key_enter(int action,int mods)
+{
+	if(action == GLFW_PRESS)
+	{
+		glm::mat4 mod ;
+		transform_camera = glm::translate(mod,glm::vec3(0.0f,0.0f,0));	}
+	return 0;
+}
+void init_key_func()
+{
+	key_action_list[GLFW_KEY_UP] = key_action_list[GLFW_KEY_W] = key_up;
+	key_action_list[GLFW_KEY_DOWN] = key_action_list[GLFW_KEY_S] = key_down;
+	key_action_list[GLFW_KEY_RIGHT] = key_action_list[GLFW_KEY_A] = key_right;
+	key_action_list[GLFW_KEY_LEFT] = key_action_list[GLFW_KEY_D] = key_left;
+
+	key_action_list[GLFW_KEY_ENTER] = key_enter;
+}
 void Key_callback(GLFWwindow* pWindow, int key, int scancode, int action, int mods)
 {
     if(pWindow == main_window)
     {
         assert(key<512);
-        if(key_action_lsit[key])
-            key_action_lsit[key](action,mods);
+        if(key_action_list[key])
+            key_action_list[key](action,mods);
     }
     else
         return;//todo
@@ -57,12 +121,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-  if(yoffset>0.0f)
-	  scalef *=1.01f;
-  else
-	  scalef /=1.01f;
-  if(scalef<=0.0f)
-	  scalef = 1.0f;
+	//view_source_point[2]+=yoffset/100;
 }
 void error_callback(int error, const char* description)
 {
@@ -76,10 +135,8 @@ void setWindowsSize_callback(GLFWwindow* window,int w,int h)
 {
     GLfloat aspectRatio;
     // 防止被0所除
-
-    if (0 == h){
+    if (0 == h)
         h = 1;
-    }
     // 设置视口为窗口的大小
     glViewport(0, 0, w, h);
     // 选择投影矩阵，并重置坐标系统
@@ -89,9 +146,9 @@ void setWindowsSize_callback(GLFWwindow* window,int w,int h)
     aspectRatio = (GLfloat) w / (GLfloat) h;
     // 定义裁剪区域（根据窗口的纵横比，并使用正投影）
     if (w <=h) {// 宽 < 高
-        glOrtho(-1.0, 1.0, -1 /aspectRatio, 1 / aspectRatio, 10.0, -10.0);
+        glOrtho(-1.0, 1.0, -1 /aspectRatio, 1 / aspectRatio, 100.0, -10.0);
     } else {// 宽 > 高
-        glOrtho(-1.0 * aspectRatio, 1.0 *aspectRatio, -1.0, 1.0, 10.0, -10.0);
+        glOrtho(-1.0 * aspectRatio, 1.0 *aspectRatio, -1.0, 1.0, 100.0, -10.0);
     }
     // 选择模型视图矩阵，并重置坐标系统
     glMatrixMode(GL_MODELVIEW);
@@ -158,6 +215,7 @@ int init()
         }
         Log_r::Notice("window mod ,resolution is :%d*%d",main_window_size_width,main_window_size_high);
     }
+    init_key_func();
     return 0;
 }
 int destroy()
@@ -190,19 +248,13 @@ int main_loop()
     while (!glfwWindowShouldClose(main_window))
     {
         usleep(200000);
+        glm::mat4 model_view_matrix = glm::affineInverse(transform_camera);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadMatrixf(&model_view_matrix[0][0]);
         glClearColor(1.0, 1.0, 1.0, 0.0);
         glClear(GL_COLOR_BUFFER_BIT);
-        if(scalef!=1.0f)
-        {
-        	glPushMatrix();
-        	glScalef(scalef, scalef, scalef);
-        }
-        m.draw(5);
-        if(scalef!=1.0f)
-        {
-        	glPopMatrix();
-        }
-        //w.draw();
+        m.draw(8);
+
         /* Swap front and back buffers */
         glfwSwapBuffers(main_window);
 
