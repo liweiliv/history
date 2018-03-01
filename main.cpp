@@ -38,14 +38,18 @@ glm::mat4 transform_camera(1.0f); // 摄像机的位置和定向，即摄像机�
 glm::mat4 transform_model(1.0f);  // 模型变换矩阵，即物体坐标到世界坐标
 glm::vec4 position_light0(0);     // 光源位置，世界坐标系中的坐标
 float speed_scale=0.01f;           // 鼠标交互，移动速度缩放值
-
+glm::mat4 projection(0);
+glm::vec3 camera_pos(0,0,2.0f);
+glm::vec3 camera_taget(0,0,0);
+glm::vec3 camera_up(0,1,0);
 
 int key_up(int action,int mods)
 {
 	if(action == GLFW_PRESS || action == GLFW_REPEAT)
 	{
-		glm::mat4 mod ;
-		transform_camera *= glm::translate(mod,glm::vec3(0.0f,0.0f,speed_scale));
+
+		camera_pos.y -= speed_scale;
+		transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
 	}
 	return 0;
 }
@@ -53,16 +57,17 @@ int key_down(int action,int mods)
 {
 	if(action == GLFW_PRESS || action == GLFW_REPEAT)
 	{
-		glm::mat4 mod ;
-		transform_camera *= glm::translate(mod,glm::vec3(0.0f,0.0f,-speed_scale));	}
+		camera_pos.y += speed_scale;
+		transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
+	}
 	return 0;
 }
 int key_right(int action,int mods)
 {
 	if(action == GLFW_PRESS || action == GLFW_REPEAT)
 	{
-		glm::mat4 mod ;
-		transform_camera *= glm::translate(mod,glm::vec3(0.0f,speed_scale,0.0f));
+		camera_pos.x -= speed_scale;
+		transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
 	}
 	return 0;
 }
@@ -70,8 +75,17 @@ int key_left(int action,int mods)
 {
 	if(action == GLFW_PRESS || action == GLFW_REPEAT)
 	{
-		glm::mat4 mod ;
-		transform_camera *= glm::translate(mod,glm::vec3(0.0f,-speed_scale,0.0f));
+		camera_pos.x += speed_scale;
+		transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
+	}
+	return 0;
+}
+int key_e(int action,int mods)
+{
+	if(action == GLFW_PRESS || action == GLFW_REPEAT)
+	{
+		camera_pos.z -= speed_scale;
+		transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
 	}
 	return 0;
 }
@@ -79,8 +93,9 @@ int key_enter(int action,int mods)
 {
 	if(action == GLFW_PRESS)
 	{
-		glm::mat4 mod ;
-		transform_camera = glm::translate(mod,glm::vec3(0.0f,0.0f,0));	}
+		camera_pos = glm::vec3(0,0,2.0f);
+		transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
+	}
 	return 0;
 }
 void init_key_func()
@@ -89,7 +104,7 @@ void init_key_func()
 	key_action_list[GLFW_KEY_DOWN] = key_action_list[GLFW_KEY_S] = key_down;
 	key_action_list[GLFW_KEY_RIGHT] = key_action_list[GLFW_KEY_A] = key_right;
 	key_action_list[GLFW_KEY_LEFT] = key_action_list[GLFW_KEY_D] = key_left;
-
+	key_action_list[GLFW_KEY_E] = key_e;
 	key_action_list[GLFW_KEY_ENTER] = key_enter;
 }
 void Key_callback(GLFWwindow* pWindow, int key, int scancode, int action, int mods)
@@ -121,7 +136,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	//view_source_point[2]+=yoffset/100;
+	transform_camera = glm::translate( transform_camera,speed_scale*glm::vec3(0,0,1) );
 }
 void error_callback(int error, const char* description)
 {
@@ -131,29 +146,13 @@ void window_refresh_callback(GLFWwindow * w)
 {
 
 }
-void setWindowsSize_callback(GLFWwindow* window,int w,int h)
+void setWindowsSize(GLFWwindow* window,int w,int h)
 {
-    GLfloat aspectRatio;
-    // 防止被0所除
-    if (0 == h)
-        h = 1;
-    // 设置视口为窗口的大小
-    glViewport(0, 0, w, h);
-    // 选择投影矩阵，并重置坐标系统
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    // 计算窗口的纵横比（像素比）
-    aspectRatio = (GLfloat) w / (GLfloat) h;
-    // 定义裁剪区域（根据窗口的纵横比，并使用正投影）
-    if (w <=h) {// 宽 < 高
-        glOrtho(-1.0, 1.0, -1 /aspectRatio, 1 / aspectRatio, 100.0, -10.0);
-    } else {// 宽 > 高
-        glOrtho(-1.0 * aspectRatio, 1.0 *aspectRatio, -1.0, 1.0, 100.0, -10.0);
-    }
-    // 选择模型视图矩阵，并重置坐标系统
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    Log_r::Notice("window size change to %d*%d",w,h);
+	main_window_size_width = w;
+	main_window_size_high = h;
+	projection = glm::perspective(glm::radians(60.0f),(float)(main_window_size_width)/(float)(main_window_size_high),0.1f,100.f);
+	transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
+   Log_r::Notice("window size change to %d*%d",w,h);
 }
 void init_glfw_callback()
 {
@@ -162,7 +161,7 @@ void init_glfw_callback()
     glfwSetKeyCallback(main_window,Key_callback);
     glfwSetMouseButtonCallback(main_window, mouse_button_callback);
     glfwSetScrollCallback(main_window, scroll_callback);
-    glfwSetWindowSizeCallback(main_window,setWindowsSize_callback);
+    glfwSetWindowSizeCallback(main_window,setWindowsSize);
 }
 
 int init()
@@ -215,6 +214,8 @@ int init()
         }
         Log_r::Notice("window mod ,resolution is :%d*%d",main_window_size_width,main_window_size_high);
     }
+	projection = glm::perspective(glm::radians(60.0f),(float)(main_window_size_width)/(float)(main_window_size_high),0.1f,100.f);
+	transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
     init_key_func();
     return 0;
 }
@@ -243,21 +244,21 @@ int init_main_window()
 int main_loop()
 {
     g_map m(1,0,0,0,0,"fs");
-    setWindowsSize_callback(main_window,main_window_size_width,main_window_size_high);
+    //setWindowsSize_callback(main_window,main_window_size_width,main_window_size_high);
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(main_window))
     {
-        usleep(200000);
-        glm::mat4 model_view_matrix = glm::affineInverse(transform_camera);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadMatrixf(&model_view_matrix[0][0]);
+        //usleep(200000);
+
         glClearColor(1.0, 1.0, 1.0, 0.0);
         glClear(GL_COLOR_BUFFER_BIT);
-        m.draw(8);
+        m.draw(4);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(main_window);
-
+        glm::mat4 MVP = projection * transform_camera * glm::mat4(1.0f);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadMatrixf(&MVP[0][0]);
         /* Poll for and process events */
         glfwPollEvents();
     }
