@@ -35,9 +35,7 @@ typedef int (*key_action)(int action,int mods);
 key_action key_action_list[512] = {0};
 
 glm::mat4 transform_camera(1.0f); // 摄像机的位置和定向，即摄像机在世界坐标系中位置
-glm::mat4 transform_model(1.0f);  // 模型变换矩阵，即物体坐标到世界坐标
-glm::vec4 position_light0(0);     // 光源位置，世界坐标系中的坐标
-float speed_scale=0.01f;           // 鼠标交互，移动速度缩放值
+float speed_scale=0.0001f;           // 鼠标交互，移动速度缩放值
 glm::mat4 projection(0);
 glm::vec3 camera_pos(0,0,2.0f);
 glm::vec3 camera_taget(0,0,0);
@@ -47,8 +45,11 @@ int key_up(int action,int mods)
 {
 	if(action == GLFW_PRESS || action == GLFW_REPEAT)
 	{
-
-		camera_pos.y -= speed_scale;
+		glm::vec4 v(camera_pos.x,camera_pos.y,camera_pos.z,1);
+		glm::mat4 m(1);
+		m = glm::rotate(m,speed_scale*10,glm::vec3(1,0,0));
+		v = m*v;
+		camera_pos = v;
 		transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
 	}
 	return 0;
@@ -57,7 +58,11 @@ int key_down(int action,int mods)
 {
 	if(action == GLFW_PRESS || action == GLFW_REPEAT)
 	{
-		camera_pos.y += speed_scale;
+		glm::vec4 v(camera_pos.x,camera_pos.y,camera_pos.z,1);
+		glm::mat4 m(1);
+		m = glm::rotate(m,-speed_scale*10,glm::vec3(1,0,0));
+		v = m*v;
+		camera_pos = v;
 		transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
 	}
 	return 0;
@@ -66,7 +71,11 @@ int key_right(int action,int mods)
 {
 	if(action == GLFW_PRESS || action == GLFW_REPEAT)
 	{
-		camera_pos.x -= speed_scale;
+		glm::vec4 v(camera_pos.x,camera_pos.y,camera_pos.z,1);
+		glm::mat4 m(1);
+		m = glm::rotate(m,-speed_scale*10,glm::vec3(0,1,0));
+		v = m*v;
+		camera_pos = v;
 		transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
 	}
 	return 0;
@@ -75,7 +84,11 @@ int key_left(int action,int mods)
 {
 	if(action == GLFW_PRESS || action == GLFW_REPEAT)
 	{
-		camera_pos.x += speed_scale;
+		glm::vec4 v(camera_pos.x,camera_pos.y,camera_pos.z,1);
+		glm::mat4 m(1);
+		m = glm::rotate(m,speed_scale*10,glm::vec3(0,1,0));
+		v = m*v;
+		camera_pos = v;
 		transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
 	}
 	return 0;
@@ -85,6 +98,15 @@ int key_e(int action,int mods)
 	if(action == GLFW_PRESS || action == GLFW_REPEAT)
 	{
 		camera_pos.z -= speed_scale;
+		transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
+	}
+	return 0;
+}
+int key_q(int action,int mods)
+{
+	if(action == GLFW_PRESS || action == GLFW_REPEAT)
+	{
+		camera_pos.z += speed_scale;
 		transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
 	}
 	return 0;
@@ -102,9 +124,11 @@ void init_key_func()
 {
 	key_action_list[GLFW_KEY_UP] = key_action_list[GLFW_KEY_W] = key_up;
 	key_action_list[GLFW_KEY_DOWN] = key_action_list[GLFW_KEY_S] = key_down;
-	key_action_list[GLFW_KEY_RIGHT] = key_action_list[GLFW_KEY_A] = key_right;
-	key_action_list[GLFW_KEY_LEFT] = key_action_list[GLFW_KEY_D] = key_left;
+	key_action_list[GLFW_KEY_RIGHT] = key_action_list[GLFW_KEY_D] = key_right;
+	key_action_list[GLFW_KEY_LEFT] = key_action_list[GLFW_KEY_A] = key_left;
 	key_action_list[GLFW_KEY_E] = key_e;
+	key_action_list[GLFW_KEY_Q] = key_q;
+
 	key_action_list[GLFW_KEY_ENTER] = key_enter;
 }
 void Key_callback(GLFWwindow* pWindow, int key, int scancode, int action, int mods)
@@ -136,7 +160,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	transform_camera = glm::translate( transform_camera,speed_scale*glm::vec3(0,0,1) );
+	if(yoffset>0)
+		camera_pos.z -= speed_scale*50;
+	else if(yoffset<0)
+		camera_pos.z += speed_scale*50;
+	transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
 }
 void error_callback(int error, const char* description)
 {
@@ -150,6 +178,7 @@ void setWindowsSize(GLFWwindow* window,int w,int h)
 {
 	main_window_size_width = w;
 	main_window_size_high = h;
+	glViewport(0,0,w,h);
 	projection = glm::perspective(glm::radians(60.0f),(float)(main_window_size_width)/(float)(main_window_size_high),0.1f,100.f);
 	transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
    Log_r::Notice("window size change to %d*%d",w,h);
@@ -252,7 +281,7 @@ int main_loop()
 
         glClearColor(1.0, 1.0, 1.0, 0.0);
         glClear(GL_COLOR_BUFFER_BIT);
-        m.draw(4);
+        m.draw(10);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(main_window);

@@ -324,7 +324,10 @@ struct _quadtree_node * g_map::coordinate2quadtree_node_by_pos(const g_pos_3d<GL
 		{
 			struct _quadtree_node * node = &m_maps[i].m_map_tree->root;
 			if (node_stack)
+			{
+				memset(node_stack,0,sizeof(struct _quadtree_node *)*level);
 				node_stack[0] = node;
+			}
 			while (QT_LEVEL(node->id) <= (uint) level)
 			{
 				//(static_cast<map_obj*>(node->v))->draw();
@@ -332,6 +335,13 @@ struct _quadtree_node * g_map::coordinate2quadtree_node_by_pos(const g_pos_3d<GL
 						m_maps[i].m_map_tree, node, p);
 				if (tmp_node == NULL)
 				{
+					if(node_stack!=NULL)
+					for (int j=0;j<level;j++)
+					{
+						if(node_stack[j]!=NULL)
+							static_cast<map_obj*>(node_stack[j]->v)->draw();
+					}
+
 					for(int j=0;j<4;j++)
 					{
 						(static_cast<map_obj*>(node->child[j]->v))->draw();
