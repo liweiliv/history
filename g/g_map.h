@@ -31,13 +31,14 @@
 //lazy create
 #include <string.h>
 #include <stdint.h>
+#include <glm/glm.hpp>
+#include <glm/vec3.hpp>
 class map_obj;
 struct _quadtree;
 struct _quadtree_node;
 
 template<typename GT_TYPE>
 struct g_pos_3d;
-#define _pai 3.14159265358979323846L
 #define angle2rad(x) (_pai*(x)/180.0f)
 class g_map
 {
@@ -90,7 +91,7 @@ public:
 			float orbital_inclination, int orbital_period,
 			const char* map_index_file);
 	~g_map();
-	void draw(const unsigned int level = 3);
+	void draw(const unsigned int level ,const glm::vec3 & camera);
 	struct _quadtree_node * coordinate2quadtree_node(float longitude,
 			float latitude, int level, struct _quadtree_node **node_stack);
 	struct _quadtree_node * coordinate2quadtree_node_by_pos(const g_pos_3d<double> *p,int level, struct _quadtree_node **node_stack);

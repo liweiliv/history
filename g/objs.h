@@ -73,5 +73,49 @@ public:
     	m_ref++;
     }
 };
+class tree_branch_obj :public g_obj<GLdouble>
+{
+private:
+	GLfloat m_length;
+	GLfloat m_diameter;
+public:
+	tree_branch_obj(GLfloat length,GLfloat diameter):g_obj<GLdouble>(GT_MAP,0)
+	{
+		m_length = length;
+		m_diameter = diameter;
+		m_sharp = new g_sharp<g_pos_3d<GLdouble>>(33,31*3,false);
+		create();
+	}
+	inline void create()
+	{
+		for(uint16_t idx = 0;idx<32;idx++)
+		{
+			m_sharp->m_vectors[idx] = {cos(2*_pai/32*idx)*m_diameter,sin(2*_pai/32*idx)*m_diameter,0};
+			m_sharp->m_colors[idx] = {((float)idx)/200.0f+0.1f,0.2f,0.1f};
+		}
+		m_sharp->m_vectors[32] = {0,0,m_length};
+		for(uint16_t idx = 0;idx<32;idx++)
+		{
+			m_sharp->m_indices[idx*3] = idx;
+			m_sharp->m_indices[idx*3+1] = (idx+1)%32;
+			m_sharp->m_indices[idx*3+2] = 32;
+		}
+	}
+    void draw()
+    {
+        g_pos_3d<GLdouble> c ,d;
+        INIT_POS_3D(&c,0,0,0);
+        INIT_POS_3D(&d,0,0,0);
+        m_sharp->draw(&c,&d);
+    }
+};
+/*
+class tree_obj :public g_obj<GLdouble>
+{
+	tree_obj()
+	{
+        m_sharp = new g_sharp<g_pos_3d<GLdouble>>(30,0,false);
 
+	}
+};*/
 #endif /* G_OBJS_H_ */

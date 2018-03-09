@@ -28,7 +28,7 @@ public:
     uint8_t m_draw_type;
     bool m_use_vbo;
 
-    g_sharp(uint32_t point_size,uint32_t index_size = 0,bool use_vbo = false)
+    g_sharp(uint32_t point_size,uint32_t index_size = 0,bool use_vbo = true)
     {
         m_point_size = point_size;
         m_index_size = index_size;
@@ -169,11 +169,11 @@ private:
         set_normally_data();
         if(m_indices)
         {
-            glDrawElements(GL_LINE_STRIP, m_index_size, GL_UNSIGNED_BYTE, m_indices);
+            glDrawElements(GL_LINE_LOOP, m_index_size, GL_UNSIGNED_BYTE, m_indices);
         }
         else
         {
-            glDrawArrays(GL_LINE_STRIP, 0, m_point_size);
+            glDrawArrays(GL_LINE_LOOP, 0, m_point_size);
         }
         glDisableClientState(GL_VERTEX_ARRAY);  // disable vertex arrays
         glDisableClientState(GL_COLOR_ARRAY);

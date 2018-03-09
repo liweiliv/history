@@ -21,6 +21,8 @@
 #include "objs.h"
 #include "Log_r.h"
 #include "bitmap.h"
+
+#define max_cos_value_in_sub_trangle (0.79465447229176611l+0.000001l)
 constexpr static const uint8_t icosohedron_faces[20][3] =
 {
 { 1, 4, 0 },
@@ -230,23 +232,33 @@ g_map::~g_map()
 	}
 
 }
-void g_map::draw(const unsigned int level)
+void g_map::draw(const unsigned int level,const glm::vec3 & camera)
 {
 #if 1
-	struct _quadtree_node *node_stack[16], *n = coordinate2quadtree_node(10, 2,
-			level, node_stack);
+	g_pos_3d<GLdouble> p = {camera.x,camera.y,camera.z};
+	struct _quadtree_node *node_stack[16], *n = coordinate2quadtree_node_by_pos(&p,level, node_stack) ;
 	if (n != NULL)
 	{
+		for (int i = 0; i < 20; i++)
+		{
+			quadtree_node *n = &m_maps[i].m_map_tree->root;
+			static_cast<map_obj*>(n->v)->draw();
+		}
 		for (uint i = 0 ;i<level;i++)
 		{
 			if (node_stack[i] != NULL)
 			{
-				map_obj * m = static_cast<map_obj*>(node_stack[i]->v);
-				m->draw();
+				//map_obj * m = static_cast<map_obj*>(node_stack[i]->v);
+				static_cast<map_obj*>(node_stack[i]->child[0]->v)->draw();
+				static_cast<map_obj*>(node_stack[i]->child[1]->v)->draw();
+				static_cast<map_obj*>(node_stack[i]->child[2]->v)->draw();
+				static_cast<map_obj*>(node_stack[i]->child[3]->v)->draw();
 			}
 			else
 				break;
 		}
+		if(node_stack[0] !=NULL )
+			static_cast<map_obj*>(node_stack[0]->v)->draw();
 	}
 #else
 	int c = 0;
@@ -302,12 +314,16 @@ g_map::get_sub_trangler_by_pos(struct _quadtree * tree, _quadtree_node * node,
 		const g_pos_3d<GLdouble> *  _vlist = (static_cast<map_obj*>(node->child[i]->v))->m_sharp->m_vectors;
 		if (IsIntersectTriangle(source_point, *p, _vlist[0],_vlist[1], _vlist[2]))
 			return node->child[i];
-		else
-		{
-			//Log_r::Error("point %f ,%f,%f is not in ",p->x,p->y,p->z);
-		}
 	}
+	Log_r::Error("level %ld is not contain point %f,%f,%f",QT_LEVEL(node->id),p->x,p->y,p->z);
 	return NULL;
+}
+template <typename GT_TYPE>
+static inline bool vector_in_the_same_dir(const g_pos_3d<GT_TYPE> &v,  const g_pos_3d<GT_TYPE> &v1)
+{
+	D_SUB_3D_VECTOR_TEMPLATE(tmp1,v,v1);
+	D_ADD_3D_VECTOR_TEMPLATE(tmp2,v,v1);
+	return ((tmp1.x*tmp1.x+tmp1.y*tmp1.y+tmp1.z*tmp1.z)<(tmp2.x*tmp2.x+tmp2.y*tmp2.y+tmp2.z*tmp2.z));
 }
 struct _quadtree_node * g_map::coordinate2quadtree_node_by_pos(const g_pos_3d<GLdouble> *p,int level, struct _quadtree_node **node_stack)
 {
@@ -317,6 +333,10 @@ struct _quadtree_node * g_map::coordinate2quadtree_node_by_pos(const g_pos_3d<GL
 	glEnd();
 	for (int i = 0; i < 20; i++)
 	{
+		if(!vector_in_the_same_dir(*p,m_maps[i].m_map->m_center))
+		{
+			continue;
+		}
 		if (IsIntersectTriangle(source_point, *p,
 				m_maps[i].m_map->m_sharp->m_vectors[0],
 				m_maps[i].m_map->m_sharp->m_vectors[1],

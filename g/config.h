@@ -15,7 +15,7 @@
 #define G_VIDEO_RESOLUTION_HIGH     "resolution_high"
 #define G_VIDEO_RESOLUTION_WIDTH    "resolution_width"
 #define G_VIDEO_FULL_SCREEN         "full_screen"
-
+#define G_VIDEO_VERTICAL_SUNC       "vertical_sync"
 
 /*
  * voice config

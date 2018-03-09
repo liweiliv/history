@@ -29,13 +29,14 @@ GLFWwindow* main_window = NULL;
 int8_t main_window_full_screen =0;
 int main_window_size_high = 0;
 int main_window_size_width = 0;
+int8_t vertical_sync =1 ;
 const char * conf_file = NULL;
 typedef int (*key_action)(int action,int mods);
 
 key_action key_action_list[512] = {0};
 
 glm::mat4 transform_camera(1.0f); // 摄像机的位置和定向，即摄像机在世界坐标系中位置
-float speed_scale=0.0001f;           // 鼠标交互，移动速度缩放值
+float speed_scale=0.001f;           // 鼠标交互，移动速度缩放值
 glm::mat4 projection(0);
 glm::vec3 camera_pos(0,0,2.0f);
 glm::vec3 camera_taget(0,0,0);
@@ -243,6 +244,9 @@ int init()
         }
         Log_r::Notice("window mod ,resolution is :%d*%d",main_window_size_width,main_window_size_high);
     }
+    /*垂直同步*/
+    vertical_sync = g_ini.get_int(G_VIDEO,G_VIDEO_VERTICAL_SUNC,1);
+   glfwSwapInterval(vertical_sync);
 	projection = glm::perspective(glm::radians(60.0f),(float)(main_window_size_width)/(float)(main_window_size_high),0.1f,100.f);
 	transform_camera = glm::lookAt(camera_pos,camera_taget,camera_up);
     init_key_func();
@@ -270,19 +274,56 @@ int init_main_window()
     init_glfw_callback();
     return 0;
 }
+class perf_monitor
+{
+private:
+	uint16_t curren_idx;
+	uint16_t begin_idx;
+	uint16_t queue[120];
+   timespec t;
+public:
+	perf_monitor()
+	{
+		curren_idx = begin_idx = 0;
+		memset(queue,0,sizeof(queue));
+		clock_gettime(CLOCK_REALTIME, &t);
+	}
+	void frame()
+	{
+      timespec now;
+      clock_gettime(CLOCK_REALTIME, &now);
+		if(now.tv_sec>t.tv_sec)
+		{
+			Log_r::Notice("fps:%u",queue[curren_idx]);
+			curren_idx=(curren_idx+1)%120;
+			queue[curren_idx] =1;
+			if(begin_idx == curren_idx)
+				begin_idx=(begin_idx+1)%120;
+			memcpy(&t,&now,sizeof(t));
+		}
+		else
+		{
+			queue[curren_idx]++;
+		}
+	}
+};
+#include "objs.h"
 int main_loop()
 {
     g_map m(1,0,0,0,0,"fs");
+    tree_branch_obj t(2.0,0.10);
     //setWindowsSize_callback(main_window,main_window_size_width,main_window_size_high);
     /* Loop until the user closes the window */
+    perf_monitor monitor;
     while (!glfwWindowShouldClose(main_window))
     {
         //usleep(200000);
-
-        glClearColor(1.0, 1.0, 1.0, 0.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-        m.draw(10);
-
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+     //   m.draw(14,camera_pos);
+        t.draw();
         /* Swap front and back buffers */
         glfwSwapBuffers(main_window);
         glm::mat4 MVP = projection * transform_camera * glm::mat4(1.0f);
@@ -290,6 +331,8 @@ int main_loop()
         glLoadMatrixf(&MVP[0][0]);
         /* Poll for and process events */
         glfwPollEvents();
+        monitor.frame();
+        usleep(10000);
     }
     return 0;
 }
