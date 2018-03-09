@@ -93,7 +93,7 @@ public:
 			m_sharp->m_vectors[idx] = {cos(2*_pai/32*idx)*m_diameter,sin(2*_pai/32*idx)*m_diameter,0};
 			m_sharp->m_colors[idx] = {((float)idx)/200.0f+0.1f,0.2f,0.1f};
 		}
-		m_sharp->m_vectors[32] = {0,0,m_length};
+		m_sharp->m_vectors[32] = {0,0,-m_length};
 		for(uint16_t idx = 0;idx<32;idx++)
 		{
 			m_sharp->m_indices[idx*3] = idx;

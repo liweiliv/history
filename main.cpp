@@ -324,6 +324,11 @@ int main_loop()
         glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
      //   m.draw(14,camera_pos);
         t.draw();
+        glPushMatrix();
+        glTranslatef(0.3f,0,0);
+        t.draw();
+        glPopMatrix();
+
         /* Swap front and back buffers */
         glfwSwapBuffers(main_window);
         glm::mat4 MVP = projection * transform_camera * glm::mat4(1.0f);
